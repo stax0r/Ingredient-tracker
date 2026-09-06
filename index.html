@@ -116,7 +116,7 @@
                             <div id="recipe-ingredients-container" class="space-y-1 bg-neutral-800 p-2 rounded border border-neutral-700 max-h-28 overflow-y-auto">
                                 <p class="text-xs text-neutral-400 italic">Add ingredients below</p>
                             </div>
-                            <button type="button" onclick="addIngredientRowToRecipeForm()" class="text-xs text-neutral-300 hover:underline">+ Add Ingredient Requirement</button>
+                            <button type="button" onclick="addIngredientRowToRecipeForm('recipe-ingredients-container')" class="text-xs text-neutral-300 hover:underline">+ Add Ingredient Requirement</button>
                             <button type="submit" class="w-full mt-2 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 py-1.5 rounded text-xs font-semibold">Save Recipe</button>
                         </form>
                         <div id="admin-recipes-list" class="space-y-2 max-h-36 overflow-y-auto pr-1 mt-2"></div>
@@ -140,6 +140,27 @@
         </div>
 
     </main>
+
+    <!-- Edit Recipe Modal -->
+    <div id="edit-recipe-modal" class="hidden fixed inset-0 bg-black/70 flex justify-center items-center p-4 z-50">
+        <div class="bg-neutral-850 border border-neutral-700 rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <h2 class="text-lg font-bold text-neutral-100">Edit Potion Recipe</h2>
+            <input type="hidden" id="edit-recipe-id">
+            <div class="space-y-1">
+                <label class="text-xs text-neutral-400 uppercase font-bold">Potion Name</label>
+                <input type="text" id="edit-recipe-name" class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-white">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs text-neutral-400 uppercase font-bold">Ingredients</label>
+                <div id="edit-recipe-ingredients-container" class="space-y-1 bg-neutral-800 p-2 rounded border border-neutral-700 max-h-36 overflow-y-auto"></div>
+                <button type="button" onclick="addIngredientRowToRecipeForm('edit-recipe-ingredients-container')" class="text-xs text-neutral-300 hover:underline mt-1">+ Add Ingredient Requirement</button>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeEditRecipeModal()" class="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-3 py-1.5 rounded text-xs font-semibold">Cancel</button>
+                <button onclick="saveEditedRecipe()" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-3 py-1.5 rounded text-xs font-semibold">Save Changes</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Application Script -->
     <script type="module">
@@ -205,7 +226,14 @@
             const adminLocList = document.getElementById("admin-locations-list");
             adminLocList.innerHTML = "";
 
-            for (const [id, loc] of Object.entries(cachedLocations)) {
+            // Sort locations alphabetically by Hold, then Town
+            const sortedLocations = Object.entries(cachedLocations).sort((a, b) => {
+                const textA = `${a[1].hold} / ${a[1].town}`.toLowerCase();
+                const textB = `${b[1].hold} / ${b[1].town}`.toLowerCase();
+                return textA.localeCompare(textB);
+            });
+
+            for (const [id, loc] of sortedLocations) {
                 locSelect.innerHTML += `<option value="${id}">${loc.hold} / ${loc.town}</option>`;
                 
                 adminLocList.innerHTML += `
@@ -229,7 +257,12 @@
             const adminIngList = document.getElementById("admin-ingredients-list");
             adminIngList.innerHTML = "";
 
-            for (const [id, ing] of Object.entries(cachedIngredients)) {
+            // Sort ingredients alphabetically by name
+            const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => 
+                a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
+            );
+
+            for (const [id, ing] of sortedIngredients) {
                 ingSelect.innerHTML += `<option value="${id}">${ing.name}</option>`;
                 
                 adminIngList.innerHTML += `
@@ -252,7 +285,12 @@
             const adminRecipeList = document.getElementById("admin-recipes-list");
             adminRecipeList.innerHTML = "";
 
-            for (const [id, rec] of Object.entries(cachedRecipes)) {
+            // Sort recipes alphabetically by name
+            const sortedRecipes = Object.entries(cachedRecipes).sort((a, b) => 
+                a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
+            );
+
+            for (const [id, rec] of sortedRecipes) {
                 recipeSelect.innerHTML += `<option value="${id}">${rec.name}</option>`;
                 
                 adminRecipeList.innerHTML += `
@@ -325,20 +363,31 @@
             }
         };
 
-        // Admin: Recipes
-        window.addIngredientRowToRecipeForm = () => {
-            const container = document.getElementById("recipe-ingredients-container");
-            const rowId = "row-" + Date.now();
+        // Admin: Recipes & Dynamic rows
+        window.addIngredientRowToRecipeForm = (containerId, selectedIngId = "", qtyVal = "") => {
+            const container = document.getElementById(containerId);
+            // Clear default placeholder text if present
+            if (container.querySelector("p")) {
+                container.innerHTML = "";
+            }
+            const rowId = "row-" + Math.random().toString(36).substring(2, 9);
+            
+            // Sort ingredients alphabetically inside the dropdown selector
+            const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => 
+                a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
+            );
+
             let options = '<option value="">Ingredient...</option>';
-            for (const [id, ing] of Object.entries(cachedIngredients)) {
-                options += `<option value="${id}">${ing.name}</option>`;
+            for (const [id, ing] of sortedIngredients) {
+                const selected = id === selectedIngId ? 'selected' : '';
+                options += `<option value="${id}" ${selected}>${ing.name}</option>`;
             }
             const div = document.createElement("div");
             div.id = rowId;
             div.className = "flex gap-2 items-center mt-1";
             div.innerHTML = `
                 <select class="recipe-ing-select flex-1 bg-neutral-900 border border-neutral-700 rounded p-1 text-xs text-white" required>${options}</select>
-                <input type="number" step="0.1" placeholder="Qty" class="recipe-ing-qty w-16 bg-neutral-900 border border-neutral-700 rounded p-1 text-xs text-white" required>
+                <input type="number" step="0.1" value="${qtyVal}" placeholder="Qty" class="recipe-ing-qty w-16 bg-neutral-900 border border-neutral-700 rounded p-1 text-xs text-white" required>
                 <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-neutral-400 font-bold text-xs">X</button>
             `;
             container.appendChild(div);
@@ -370,12 +419,46 @@
         window.openEditRecipeModal = (id) => {
             const rec = cachedRecipes[id];
             if (!rec) return;
-            const newName = prompt("Edit Potion Name:", rec.name);
-            if (newName === null) return;
+            document.getElementById("edit-recipe-id").value = id;
+            document.getElementById("edit-recipe-name").value = rec.name;
             
-            update(ref(db, `recipes/${id}`), { name: newName.trim() || rec.name })
-                .then(() => alert("Potion updated successfully!"))
-                .catch(err => alert("Error: " + err.message));
+            const container = document.getElementById("edit-recipe-ingredients-container");
+            container.innerHTML = "";
+
+            if (rec.ingredients) {
+                for (const [ingId, qty] of Object.entries(rec.ingredients)) {
+                    addIngredientRowToRecipeForm("edit-recipe-ingredients-container", ingId, qty);
+                }
+            }
+
+            document.getElementById("edit-recipe-modal").classList.remove("hidden");
+        };
+
+        window.closeEditRecipeModal = () => {
+            document.getElementById("edit-recipe-modal").classList.add("hidden");
+        };
+
+        window.saveEditedRecipe = () => {
+            const id = document.getElementById("edit-recipe-id").value;
+            const name = document.getElementById("edit-recipe-name").value.trim();
+            const rows = document.querySelectorAll("#edit-recipe-ingredients-container > div");
+            const ingredients = {};
+            
+            rows.forEach(r => {
+                const ingId = r.querySelector(".recipe-ing-select").value;
+                const qty = parseFloat(r.querySelector(".recipe-ing-qty").value);
+                if (ingId && qty) ingredients[ingId] = qty;
+            });
+
+            if (!name) return alert("Potion name cannot be empty.");
+            if (Object.keys(ingredients).length === 0) return alert("Add at least one ingredient!");
+
+            update(ref(db, `recipes/${id}`), { name, ingredients })
+                .then(() => {
+                    alert("Potion recipe updated successfully!");
+                    closeEditRecipeModal();
+                })
+                .catch(err => alert("Error updating recipe: " + err.message));
         };
 
         // Price logging
@@ -405,7 +488,7 @@
             
             const filteredIngredients = Object.entries(cachedIngredients).filter(([id, ing]) => 
                 ing.name.toLowerCase().includes(query)
-            );
+            ).sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
 
             if (filteredIngredients.length === 0) {
                 container.innerHTML = '<p class="text-sm text-neutral-400 italic">No matching ingredients found.</p>';
@@ -413,11 +496,11 @@
             }
 
             container.innerHTML = filteredIngredients.map(([ingId, ing]) => {
-                // Find all store prices for this ingredient
                 const offers = [];
                 for (const [key, p] of Object.entries(cachedPrices)) {
                     if (p.ingredientId === ingId) offers.push(p);
                 }
+                // Sort offers by price ascending
                 offers.sort((a, b) => a.price - b.price);
 
                 let offersHtml = "";
@@ -438,7 +521,7 @@
 
                         return `
                             <div class="flex justify-between items-center p-1.5 rounded text-xs ${rowStyle}">
-                                <span>${loc.hold} / ${loc.town} ${isCheapest ? '⭐ <strong>(Best)</strong>' : ''}</span>
+                                <span>${loc.hold} / ${loc.town} ${isCheapest ? '⭐ <strong>(Cheapest)</strong>' : ''}</span>
                                 <span class="font-mono">${offer.price} Gold <span class="text-[10px] text-neutral-400">(${formattedDate})</span></span>
                             </div>
                         `;
@@ -518,7 +601,14 @@
             let overallOptimalTotal = 0;
             let html = "";
 
-            for (const [ingId, neededQty] of Object.entries(totalDemands)) {
+            // Sort demanded items alphabetically by ingredient name
+            const sortedDemands = Object.entries(totalDemands).sort((a, b) => {
+                const nameA = (cachedIngredients[a[0]]?.name || "").toLowerCase();
+                const nameB = (cachedIngredients[b[0]]?.name || "").toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+
+            for (const [ingId, neededQty] of sortedDemands) {
                 const ingMeta = cachedIngredients[ingId] || { name: "Unknown Ingredient" };
                 
                 const storeOffers = [];

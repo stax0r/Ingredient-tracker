@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solitude Alchemist Guild - Realtime Potion Tracker</title>
+    <title>The Material Index - Solitude Alchemist Guild</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="bg-zinc-950 text-red-50 min-h-screen font-sans selection:bg-red-900 selection:text-white flex flex-col justify-between">
 
     <div>
         <!-- Navbar -->
-        <header class="bg-zinc-900 border-b border-red-950 p-4 flex justify-between items-center shadow-lg">
-            <h1 class="text-xl font-bold tracking-wider text-red-500 flex items-center gap-2">🧪 Solitude Alchemist Guild</h1>
+        <header class="bg-zinc-900 border-b border-red-950 p-4 flex flex-col md:flex-row justify-between items-center gap-3 shadow-lg">
+            <div class="flex flex-col items-start">
+                <h1 class="text-xl font-bold tracking-wider text-red-500 flex items-center gap-2">
+                    🧪 The Material Index <span class="text-[10px] bg-red-950 border border-red-900 px-2 py-0.5 rounded text-red-300 font-normal">Solitude Alchemist Guild</span>
+                </h1>
+                <span class="text-[10px] text-red-400/80 italic mt-0.5">Crafted by Loic Sauvage</span>
+            </div>
             
             <div class="flex items-center gap-4">
                 <!-- Admin Control Toggles (Visible only when logged in) -->
@@ -75,17 +80,23 @@
                 </form>
             </section>
 
-            <!-- Primary Feature: Ingredient Price Catalog & Search -->
+            <!-- Primary Feature: Ingredient Price Catalog & Search (Enlarged) -->
             <section class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-red-950 pb-4">
                     <div>
-                        <h2 class="text-lg font-semibold text-red-100">Ingredient Price Catalog</h2>
-                        <p class="text-xs text-red-400">Last seen prices around Skyrim</p>
+                        <h2 class="text-xl font-bold text-red-100">Ingredient Price Catalog</h2>
+                        <p class="text-xs text-red-400">Comprehensive real-time market indices across Skyrim</p>
                     </div>
-                    <input type="text" id="catalog-search" oninput="renderCatalog()" placeholder="Search ingredient catalog..." class="w-full md:w-72 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                    
+                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        <select id="catalog-location-filter" onchange="renderCatalog()" class="w-full sm:w-56 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                            <option value="">Filter by Location (All)</option>
+                        </select>
+                        <input type="text" id="catalog-search" oninput="renderCatalog()" placeholder="Search ingredient catalog..." class="w-full sm:w-64 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                    </div>
                 </div>
                 
-                <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[32rem] overflow-y-auto pr-1">
+                <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[48rem] overflow-y-auto pr-1">
                     <p class="text-sm text-red-400 italic">No ingredients found.</p>
                 </div>
             </section>
@@ -131,7 +142,7 @@
 
     <!-- Footer -->
     <footer class="bg-zinc-900 border-t border-red-950 py-4 px-6 text-center text-xs text-red-400 mt-12">
-        Questions or suggestions? Contact guild member <strong class="text-red-200">Loic Sauvage</strong> on Discord: <span class="font-mono text-red-300">@loicsauvage</span>
+        OOC: Whether you have questions, feedback, or just need to get in touch, please feel free to drop me a message on Discord at <code class="bg-zinc-950 border border-red-950 text-red-300 px-1.5 py-0.5 rounded font-mono text-[11px]">stax0r</code>. Always happy to help!
     </footer>
 
     <!-- Generic Admin Modal -->
@@ -247,14 +258,13 @@
         import { getDatabase, ref, push, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
-  apiKey: "AIzaSyDTQPUXzYr8UAawpvNce6wbXJC07-ZOmeo",
-  authDomain: "alchemy-price-tracker.firebaseapp.com",
-  databaseURL: "https://alchemy-price-tracker-default-rtdb.firebaseio.com",
-  projectId: "alchemy-price-tracker",
-  storageBucket: "alchemy-price-tracker.firebasestorage.app",
-  messagingSenderId: "357962236614",
-  appId: "1:357962236614:web:770c78966226a35f138dc7",
-  measurementId: "G-J94V9BMR1Q"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
 
         // REPLACE WITH YOUR ACTUAL WEBHOOK URL
@@ -313,12 +323,15 @@
             
             const locSelects = [
                 document.getElementById("price-location-select"),
-                document.getElementById("guest-location-select")
+                document.getElementById("guest-location-select"),
+                document.getElementById("catalog-location-filter")
             ];
             
-            locSelects.forEach(sel => {
+            locSelects.forEach((sel, index) => {
                 if (sel) {
-                    sel.innerHTML = '<option value="">Select Location...</option>';
+                    const currentVal = sel.value;
+                    sel.innerHTML = index === 2 ? '<option value="">Filter by Location (All)</option>' : '<option value="">Select Location...</option>';
+                    
                     const sortedLocations = Object.entries(cachedLocations).sort((a, b) => {
                         const textA = `${a[1].hold} / ${a[1].town}`.toLowerCase();
                         const textB = `${b[1].hold} / ${b[1].town}`.toLowerCase();
@@ -327,6 +340,7 @@
                     for (const [id, loc] of sortedLocations) {
                         sel.innerHTML += `<option value="${id}">${loc.hold} / ${loc.town}</option>`;
                     }
+                    sel.value = currentVal;
                 }
             });
 
@@ -756,14 +770,29 @@
             }).catch(err => alert("Error saving price: " + err.message));
         };
 
-        // Ingredient Catalog Search & Display
+        // Ingredient Catalog Search & Display with Location Filtering
         window.renderCatalog = () => {
             const query = (document.getElementById("catalog-search").value || "").toLowerCase();
+            const selectedLocFilter = document.getElementById("catalog-location-filter").value;
             const container = document.getElementById("catalog-container");
             
-            const filteredIngredients = Object.entries(cachedIngredients).filter(([id, ing]) => 
-                ing.name.toLowerCase().includes(query)
-            ).sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
+            const filteredIngredients = Object.entries(cachedIngredients).filter(([id, ing]) => {
+                const matchesSearch = ing.name.toLowerCase().includes(query);
+                if (!matchesSearch) return false;
+
+                // If a location filter is active, check if this ingredient has a price entry for that location
+                if (selectedLocFilter) {
+                    let hasLocationPrice = false;
+                    for (const [key, p] of Object.entries(cachedPrices)) {
+                        if (p.ingredientId === id && p.locationId === selectedLocFilter) {
+                            hasLocationPrice = true;
+                            break;
+                        }
+                    }
+                    return hasLocationPrice;
+                }
+                return true;
+            }).sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
 
             if (filteredIngredients.length === 0) {
                 container.innerHTML = '<p class="text-sm text-red-400 italic">No matching ingredients found.</p>';
@@ -773,7 +802,12 @@
             container.innerHTML = filteredIngredients.map(([ingId, ing]) => {
                 const offers = [];
                 for (const [key, p] of Object.entries(cachedPrices)) {
-                    if (p.ingredientId === ingId) offers.push(p);
+                    if (p.ingredientId === ingId) {
+                        // If location filter is applied, only show offers for that location
+                        if (!selectedLocFilter || p.locationId === selectedLocFilter) {
+                            offers.push(p);
+                        }
+                    }
                 }
                 offers.sort((a, b) => a.price - b.price);
 
@@ -783,7 +817,7 @@
                 } else {
                     offersHtml = offers.map((offer, idx) => {
                         const loc = cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
-                        const isCheapest = idx === 0;
+                        const isCheapest = idx === 0 && !selectedLocFilter;
                         const rowStyle = isCheapest ? "bg-zinc-950 text-red-100 border border-red-900 font-medium" : "bg-zinc-900/50 text-red-400";
                         
                         let formattedDate = "Unknown";

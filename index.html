@@ -12,10 +12,10 @@
         <!-- Navbar -->
         <header class="bg-zinc-900 border-b border-red-950 p-4 flex flex-col md:flex-row justify-between items-center gap-3 shadow-lg">
             <div class="flex flex-col items-start">
-                <h1 class="text-3xl font-bold tracking-wider text-red-500 flex items-center gap-2">
+                <h1 class="text-2xl font-bold tracking-wider text-red-500 flex items-center gap-2">
                     The Material Index
                 </h1>
-                <span class="text-xs text-red-400/80 italic mt-0.5">Crafted by Loic Sauvage</span>
+                <span class="text-[10px] text-red-400/80 italic mt-0.5">Crafted by Loic Sauvage</span>
             </div>
             
             <div class="flex items-center gap-4">
@@ -141,9 +141,22 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-zinc-900 border-t border-red-950 py-4 px-4 text-center space-y-2 mt-8">
-        <div class="text-sm text-red-300 max-w-xl mx-auto">
-            Discord: <code class="bg-zinc-950 border border-red-950 text-red-200 px-1.5 py-0.5 rounded font-mono text-xs">stax0r</code>
+    <footer class="bg-zinc-900 border-t border-red-950 py-3 px-4 mt-8 relative">
+        <div class="max-w-7xl mx-auto flex flex-col items-center justify-center space-y-2 text-center">
+            <!-- Guild Identification Container -->
+            <div class="flex flex-col items-center justify-center space-y-0.5">
+                <span class="text-[11px] font-semibold uppercase tracking-widest text-red-400/90">Solitude Alchemist Guild</span>
+                <span class="text-[9px] text-red-500/60 italic">Restricted Ledger — For Guild Members Only</span>
+            </div>
+
+            <div class="text-[11px] text-red-400 pt-1 border-t border-red-950/60 max-w-xl mx-auto">
+                OOC: Whether you have questions, feedback, or just need to get in touch, please feel free to drop me a message on Discord at <code class="bg-zinc-950 border border-red-950 text-red-300 px-1 py-0.2 rounded font-mono text-[10px]">stax0r</code>. Always happy to help!
+            </div>
+        </div>
+
+        <!-- Hidden-in-plain-sight Discord Tag on Bottom Right Corner -->
+        <div class="absolute bottom-1 right-2 text-[9px] font-mono text-zinc-700/60 hover:text-red-400/35 transition select-all">
+            stax0r
         </div>
     </footer>
 
@@ -1030,3 +1043,4 @@
     </script>
 </body>
 </html>
+```[cite: 3]

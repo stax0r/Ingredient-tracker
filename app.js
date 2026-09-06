@@ -41,31 +41,20 @@ window.handleSignOut = async () => {
     await signOut(auth);
 };
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, (user) => {
     const loggedOutView = document.getElementById("logged-out-view");
     const loggedInView = document.getElementById("logged-in-view");
     const userDisplay = document.getElementById("user-display");
     const adminPanel = document.getElementById("admin-panel");
 
     if (user) {
+        // User is logged in: show email, show admin panel, hide login inputs
         loggedOutView.classList.add("hidden");
         loggedInView.classList.remove("hidden");
         userDisplay.textContent = user.email;
-
-        // Check if user has admin privileges from Firestore user profile document
-        try {
-            const userDocRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userDocRef);
-            if (userSnap.exists() && userSnap.data().isAdmin === true) {
-                adminPanel.classList.remove("hidden");
-            } else {
-                adminPanel.classList.add("hidden");
-            }
-        } catch (err) {
-            console.error("Error checking admin status:", err);
-            adminPanel.classList.add("hidden");
-        }
+        adminPanel.classList.remove("hidden"); // Unlocks admin panel for anyone logged in
     } else {
+        // User is logged out: show login inputs, hide admin panel
         loggedOutView.classList.remove("hidden");
         loggedInView.classList.add("hidden");
         adminPanel.classList.add("hidden");

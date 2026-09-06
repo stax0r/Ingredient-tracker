@@ -10,7 +10,7 @@
 
     <!-- Navbar -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold tracking-wider text-emerald-400">🧪 Alchemist's Ledger (RTDB)</h1>
+        <h1 class="text-xl font-bold tracking-wider text-emerald-400">🧪 Alchemist's Ledger</h1>
         
         <div id="auth-container" class="flex items-center gap-3">
             <div id="logged-out-view" class="flex items-center gap-2">
@@ -79,13 +79,17 @@
                     <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 py-1.5 rounded text-xs font-semibold">Save Location</button>
                 </form>
 
-                <!-- Add Ingredient -->
-                <form id="ingredient-form" onsubmit="handleIngredientSubmit(event)" class="space-y-2 pb-4 border-b border-slate-800">
-                    <h3 class="text-xs font-bold uppercase text-slate-300">Add Ingredient</h3>
-                    <input type="text" id="ing-name" placeholder="Ingredient Name" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                    <input type="text" id="ing-unit" placeholder="Unit (e.g., oz, pinch)" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                    <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 py-1.5 rounded text-xs font-semibold">Save Ingredient</button>
-                </form>
+                <!-- Manage/Add Ingredients -->
+                <div class="space-y-3 pb-4 border-b border-slate-800">
+                    <h3 class="text-xs font-bold uppercase text-slate-300">Manage Ingredients</h3>
+                    <form id="ingredient-form" onsubmit="handleIngredientSubmit(event)" class="flex gap-2">
+                        <input type="text" id="ing-name" placeholder="New Ingredient Name" required class="flex-1 bg-slate-800 border border-slate-700 rounded p-2 text-xs">
+                        <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 rounded text-xs font-semibold">Add</button>
+                    </form>
+                    <div id="admin-ingredients-list" class="space-y-2 max-h-36 overflow-y-auto pr-1">
+                        <!-- Dynamically populated editable ingredient list -->
+                    </div>
+                </div>
 
                 <!-- Add Recipe -->
                 <form id="recipe-form" onsubmit="handleRecipeSubmit(event)" class="space-y-2 pb-4 border-b border-slate-800">
@@ -115,11 +119,11 @@
 
     </main>
 
-    <!-- Application Script using Realtime Database SDK -->
+    <!-- Application Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, push, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
   apiKey: "AIzaSyDTQPUXzYr8UAawpvNce6wbXJC07-ZOmeo",
@@ -140,9 +144,8 @@
         let cachedIngredients = {};
         let cachedLocations = {};
         let cachedPrices = {};
-        let currentBatch = []; // Array of { recipeId, count }
+        let currentBatch = [];
 
-        // Auth handlers
         window.handleLogin = async () => {
             const email = document.getElementById("auth-email").value;
             const password = document.getElementById("auth-password").value;
@@ -171,7 +174,7 @@
             }
         });
 
-        // Real-time Database Listeners (Instant Sync without refresh)
+        // Real-time Database Listeners
         onValue(ref(db, 'locations'), (snapshot) => {
             cachedLocations = snapshot.val() || {};
             const locSelect = document.getElementById("price-location-select");
@@ -186,8 +189,19 @@
             cachedIngredients = snapshot.val() || {};
             const ingSelect = document.getElementById("price-ingredient-select");
             ingSelect.innerHTML = '<option value="">Select Ingredient...</option>';
+            
+            const adminIngList = document.getElementById("admin-ingredients-list");
+            adminIngList.innerHTML = "";
+
             for (const [id, ing] of Object.entries(cachedIngredients)) {
-                ingSelect.innerHTML += `<option value="${id}">${ing.name} (${ing.unit})</option>`;
+                ingSelect.innerHTML += `<option value="${id}">${ing.name}</option>`;
+                
+                adminIngList.innerHTML += `
+                    <div class="flex gap-2 items-center bg-slate-950 p-1.5 rounded border border-slate-800">
+                        <input type="text" id="edit-ing-${id}" value="${ing.name}" class="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                        <button onclick="updateIngredientName('${id}')" class="bg-indigo-600 hover:bg-indigo-500 px-2 py-1 rounded text-xs font-semibold">Save</button>
+                    </div>
+                `;
             }
             runOptimization();
         });
@@ -221,10 +235,17 @@
         window.handleIngredientSubmit = (e) => {
             e.preventDefault();
             push(ref(db, 'ingredients'), {
-                name: document.getElementById("ing-name").value.trim(),
-                unit: document.getElementById("ing-unit").value.trim()
+                name: document.getElementById("ing-name").value.trim()
             });
             e.target.reset();
+        };
+
+        window.updateIngredientName = (id) => {
+            const newName = document.getElementById(`edit-ing-${id}`).value.trim();
+            if (!newName) return alert("Name cannot be empty.");
+            update(ref(db, `ingredients/${id}`), { name: newName })
+                .then(() => alert("Ingredient name updated globally!"))
+                .catch(err => alert("Error updating name: " + err.message));
         };
 
         window.addIngredientRowToRecipeForm = () => {
@@ -263,10 +284,13 @@
 
         window.handlePriceSubmit = (e) => {
             e.preventDefault();
+            // Store ISO UTC string so clients render it dynamically in their local timezone
+            const timestamp = new Date().toISOString();
             push(ref(db, 'prices'), {
                 ingredientId: document.getElementById("price-ingredient-select").value,
                 locationId: document.getElementById("price-location-select").value,
-                price: parseFloat(document.getElementById("price-amount").value)
+                price: parseFloat(document.getElementById("price-amount").value),
+                updatedAt: timestamp
             });
             e.target.reset();
         };
@@ -310,7 +334,7 @@
             }).join("");
         }
 
-        // Optimization Engine with All Store Options Display
+        // Optimization Engine with Dynamic Timezone Date Formatting
         function runOptimization() {
             const totalDemands = {};
             currentBatch.forEach(item => {
@@ -334,9 +358,8 @@
             let html = "";
 
             for (const [ingId, neededQty] of Object.entries(totalDemands)) {
-                const ingMeta = cachedIngredients[ingId] || { name: "Unknown Ingredient", unit: "units" };
+                const ingMeta = cachedIngredients[ingId] || { name: "Unknown Ingredient" };
                 
-                // Find all store prices for this ingredient
                 const storeOffers = [];
                 for (const [priceId, p] of Object.entries(cachedPrices)) {
                     if (p.ingredientId === ingId) {
@@ -344,12 +367,9 @@
                     }
                 }
 
-                // Sort by price ascending
                 storeOffers.sort((a, b) => a.price - b.price);
 
                 let bestSubtotal = 0;
-                let bestStoreText = "No stores available";
-
                 if (storeOffers.length > 0) {
                     bestSubtotal = storeOffers[0].price * neededQty;
                     overallOptimalTotal += bestSubtotal;
@@ -359,10 +379,10 @@
                     <div class="bg-slate-800/60 border border-slate-700/60 rounded-lg p-4">
                         <div class="flex justify-between items-center mb-2">
                             <span class="font-bold text-emerald-300">${ingMeta.name}</span>
-                            <span class="text-sm bg-slate-700 px-2 py-0.5 rounded">Needed: ${neededQty} ${ingMeta.unit}</span>
+                            <span class="text-sm bg-slate-700 px-2 py-0.5 rounded">Needed: ${neededQty}</span>
                         </div>
                         <div class="text-xs text-slate-300 space-y-1">
-                            <p class="font-semibold text-cyan-400 mb-1">Available Store Prices:</p>
+                            <p class="font-semibold text-cyan-400 mb-1">Available Store Prices & Last Updated:</p>
                 `;
 
                 if (storeOffers.length === 0) {
@@ -373,10 +393,26 @@
                         const isCheapest = idx === 0;
                         const rowStyle = isCheapest ? "bg-emerald-950/40 border border-emerald-500/40 text-emerald-200" : "bg-slate-900/40";
                         
+                        // Dynamically convert stored UTC date/time string into the viewer's local browser timezone
+                        let formattedDate = "Unknown date";
+                        if (offer.updatedAt) {
+                            const localDate = new Date(offer.updatedAt);
+                            formattedDate = localDate.toLocaleString([], { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric', 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            });
+                        }
+
                         html += `
-                            <div class="flex justify-between items-center p-1.5 rounded ${rowStyle}">
-                                <span>${loc.storeName} <span class="text-[10px] text-slate-400">(${loc.hold} / ${loc.city})</span> ${isCheapest ? '⭐ <strong>(Cheapest)</strong>' : ''}</span>
-                                <span class="font-mono">${offer.price} Gold/${ingMeta.unit} (Subtotal: ${(offer.price * neededQty).toFixed(2)})</span>
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded gap-1 ${rowStyle}">
+                                <div>
+                                    <span>${loc.storeName} <span class="text-[10px] text-slate-400">(${loc.hold} / ${loc.city})</span> ${isCheapest ? '⭐ <strong>(Cheapest)</strong>' : ''}</span>
+                                    <div class="text-[10px] text-slate-400">Updated: ${formattedDate}</div>
+                                </div>
+                                <span class="font-mono">${offer.price} Gold (Subtotal: ${(offer.price * neededQty).toFixed(2)})</span>
                             </div>
                         `;
                     });

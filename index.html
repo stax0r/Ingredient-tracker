@@ -6,120 +6,138 @@
     <title>Alchemist's Ledger - Realtime Potion Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="bg-neutral-950 text-neutral-100 min-h-screen font-sans">
+<body class="bg-neutral-900 text-neutral-100 min-h-screen font-sans">
 
     <!-- Navbar -->
-    <header class="bg-neutral-900 border-b border-neutral-800 p-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold tracking-wider text-neutral-200">🧪 Alchemist's Ledger</h1>
+    <header class="bg-neutral-850 border-b border-neutral-700/80 p-4 flex justify-between items-center shadow-md">
+        <h1 class="text-xl font-bold tracking-wider text-neutral-100">🧪 Alchemist's Ledger</h1>
         
         <div id="auth-container" class="flex items-center gap-3">
             <div id="logged-out-view" class="flex items-center gap-2">
-                <input type="email" id="auth-email" placeholder="Email" class="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs text-white">
-                <input type="password" id="auth-password" placeholder="Password" class="bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs text-white">
+                <input type="email" id="auth-email" placeholder="Email" class="bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white">
+                <input type="password" id="auth-password" placeholder="Password" class="bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white">
                 <button onclick="handleLogin()" class="bg-neutral-700 hover:bg-neutral-600 px-3 py-1 rounded text-xs font-semibold transition">Sign In</button>
             </div>
             <div id="logged-in-view" class="hidden flex items-center gap-3">
-                <span id="user-display" class="text-xs text-neutral-400"></span>
+                <span id="user-display" class="text-xs text-neutral-300"></span>
                 <button onclick="handleSignOut()" class="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-3 py-1 rounded text-xs font-semibold transition">Sign Out</button>
             </div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <main class="max-w-7xl mx-auto p-6 space-y-6">
 
-        <!-- Left Column: Batch Simulator & Detailed Comparison -->
-        <section class="lg:col-span-2 space-y-6">
-            
-            <!-- Simulator Controls -->
-            <div class="bg-neutral-900/60 border border-neutral-800 rounded-xl p-6 shadow-xl">
-                <h2 class="text-lg font-semibold mb-4 text-neutral-200">Real-Time Potion Batch Simulator</h2>
-                
-                <div class="flex gap-3 mb-4">
-                    <select id="simulator-recipe-select" class="flex-1 bg-neutral-900 border border-neutral-700 rounded p-2 text-sm text-neutral-200">
-                        <option value="">Select a Potion Recipe...</option>
-                    </select>
-                    <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-neutral-900 border border-neutral-700 rounded p-2 text-sm text-center text-neutral-200">
-                    <button onclick="addRecipeToBatch()" class="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-4 py-2 rounded text-sm font-semibold transition">Add to Batch</button>
-                </div>
-
-                <!-- Grouped Batch List -->
+        <!-- Primary Feature: Ingredient Price Catalog & Search -->
+        <section class="bg-neutral-850 border border-neutral-700 rounded-xl p-6 shadow-xl space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2">Current Batch Queue (Auto-Grouped)</h3>
-                    <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                        <p class="text-sm text-neutral-500 italic">No potions added to batch yet.</p>
-                    </div>
+                    <h2 class="text-lg font-semibold text-neutral-100">Ingredient Price Catalog</h2>
+                    <p class="text-xs text-neutral-400">Search any ingredient to check live prices across all discovered locations.</p>
                 </div>
+                <input type="text" id="catalog-search" oninput="renderCatalog()" placeholder="Search ingredient catalog..." class="w-full md:w-72 bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-neutral-100 focus:outline-none focus:border-neutral-500">
             </div>
-
-            <!-- Detailed Price Breakdown Matrix -->
-            <div class="bg-neutral-900/60 border border-neutral-800 rounded-xl p-6 shadow-xl">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-md font-semibold text-neutral-300">Ingredient Sourcing & Latest Prices</h3>
-                    <span id="total-batch-cost" class="text-neutral-100 font-bold text-lg">Total Optimal: 0 Gold</span>
-                </div>
-                <div id="detailed-breakdown-container" class="space-y-4">
-                    <p class="text-sm text-neutral-500 italic">Add items to batch to view pricing breakdowns.</p>
-                </div>
+            
+            <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-1">
+                <p class="text-sm text-neutral-400 italic">No ingredients found.</p>
             </div>
-
         </section>
 
-        <!-- Right Column: Admin Panel (Visible when logged in) -->
-        <aside id="admin-panel" class="hidden space-y-6">
-            <div class="bg-neutral-900 border border-neutral-700 rounded-xl p-6 shadow-xl space-y-6">
-                <h2 class="text-md font-bold text-neutral-200">🛠️ Admin Panel</h2>
+        <!-- Secondary Layout: Batch Simulator (Centered & Balanced) & Admin Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left/Center Column: Batch Simulator & Pricing Breakdown -->
+            <section class="lg:col-span-2 space-y-6">
                 
-                <!-- Manage/Add Locations (Hold / Town) -->
-                <div class="space-y-3 pb-4 border-b border-neutral-800">
-                    <h3 class="text-xs font-bold uppercase text-neutral-400">Manage Locations (Hold / Town)</h3>
-                    <form id="location-form" onsubmit="handleLocationSubmit(event)" class="space-y-2">
-                        <input type="text" id="loc-hold" placeholder="Hold / Region" required class="w-full bg-neutral-950 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                        <input type="text" id="loc-town" placeholder="City / Town" required class="w-full bg-neutral-950 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                        <button type="submit" class="w-full bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 py-1.5 rounded text-xs font-semibold">Add Location</button>
-                    </form>
-                    <div id="admin-locations-list" class="space-y-2 max-h-36 overflow-y-auto pr-1 mt-2">
-                        <!-- Dynamically populated editable location list -->
+                <!-- Simulator Controls -->
+                <div class="bg-neutral-850 border border-neutral-700 rounded-xl p-6 shadow-xl">
+                    <h2 class="text-lg font-semibold mb-4 text-neutral-200">Potion Batch Crafting Simulator</h2>
+                    
+                    <div class="flex gap-3 mb-4">
+                        <select id="simulator-recipe-select" class="flex-1 bg-neutral-800 border border-neutral-700 rounded p-2 text-sm text-neutral-200">
+                            <option value="">Select a Potion Recipe...</option>
+                        </select>
+                        <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-neutral-800 border border-neutral-700 rounded p-2 text-sm text-center text-neutral-200">
+                        <button onclick="addRecipeToBatch()" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-4 py-2 rounded text-sm font-semibold transition">Add to Batch</button>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2">Current Batch Queue (Auto-Grouped)</h3>
+                        <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                            <p class="text-sm text-neutral-400 italic">No potions added to batch yet.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Manage/Add Ingredients -->
-                <div class="space-y-3 pb-4 border-b border-neutral-800">
-                    <h3 class="text-xs font-bold uppercase text-neutral-400">Manage Ingredients</h3>
-                    <form id="ingredient-form" onsubmit="handleIngredientSubmit(event)" class="flex gap-2">
-                        <input type="text" id="ing-name" placeholder="New Ingredient Name" required class="flex-1 bg-neutral-950 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                        <button type="submit" class="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-3 py-1.5 rounded text-xs font-semibold">Add</button>
-                    </form>
-                    <div id="admin-ingredients-list" class="space-y-2 max-h-36 overflow-y-auto pr-1">
-                        <!-- Dynamically populated editable ingredient list -->
+                <!-- Detailed Price Breakdown Matrix -->
+                <div class="bg-neutral-850 border border-neutral-700 rounded-xl p-6 shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-md font-semibold text-neutral-200">Batch Ingredient Sourcing Breakdown</h3>
+                        <span id="total-batch-cost" class="text-neutral-100 font-bold text-lg">Total Optimal: 0 Gold</span>
+                    </div>
+                    <div id="detailed-breakdown-container" class="space-y-4 max-h-80 overflow-y-auto pr-1">
+                        <p class="text-sm text-neutral-400 italic">Add items to batch to view pricing breakdowns.</p>
                     </div>
                 </div>
 
-                <!-- Add Recipe -->
-                <form id="recipe-form" onsubmit="handleRecipeSubmit(event)" class="space-y-2 pb-4 border-b border-neutral-800">
-                    <h3 class="text-xs font-bold uppercase text-neutral-400">Add Potion Recipe</h3>
-                    <input type="text" id="recipe-name" placeholder="Potion Name" required class="w-full bg-neutral-950 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                    <div id="recipe-ingredients-container" class="space-y-1 bg-neutral-950 p-2 rounded border border-neutral-800">
-                        <p class="text-xs text-neutral-500 italic">Add ingredients below</p>
-                    </div>
-                    <button type="button" onclick="addIngredientRowToRecipeForm()" class="text-xs text-neutral-400 hover:underline">+ Add Ingredient Requirement</button>
-                    <button type="submit" class="w-full mt-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 py-1.5 rounded text-xs font-semibold">Save Recipe</button>
-                </form>
+            </section>
 
-                <!-- Log Price (Overwrites per Location/Ingredient) -->
-                <form id="price-form" onsubmit="handlePriceSubmit(event)" class="space-y-2">
-                    <h3 class="text-xs font-bold uppercase text-neutral-400">Log / Update Price</h3>
-                    <select id="price-ingredient-select" required class="w-full bg-neutral-950 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                        <option value="">Select Ingredient...</option>
-                    </select>
-                    <select id="price-location-select" required class="w-full bg-neutral-950 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                        <option value="">Select Location...</option>
-                    </select>
-                    <input type="number" step="0.01" id="price-amount" placeholder="Price" required class="w-full bg-neutral-950 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                    <button type="submit" class="w-full bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 py-1.5 rounded text-xs font-semibold">Record Price</button>
-                </form>
-            </div>
-        </aside>
+            <!-- Right Column: Admin Panel (Visible when logged in) -->
+            <aside id="admin-panel" class="hidden space-y-6">
+                <div class="bg-neutral-850 border border-neutral-600 rounded-xl p-6 shadow-xl space-y-6">
+                    <h2 class="text-md font-bold text-neutral-200">🛠️ Admin Panel</h2>
+                    
+                    <!-- Locations Management -->
+                    <div class="space-y-3 pb-4 border-b border-neutral-700">
+                        <h3 class="text-xs font-bold uppercase text-neutral-400">Locations (Hold / Town)</h3>
+                        <form id="location-form" onsubmit="handleLocationSubmit(event)" class="space-y-2">
+                            <input type="text" id="loc-hold" placeholder="Hold / Region" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
+                            <input type="text" id="loc-town" placeholder="City / Town" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
+                            <button type="submit" class="w-full bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 py-1.5 rounded text-xs font-semibold">Add Location</button>
+                        </form>
+                        <div id="admin-locations-list" class="space-y-2 max-h-36 overflow-y-auto pr-1 mt-2"></div>
+                    </div>
+
+                    <!-- Ingredients Management -->
+                    <div class="space-y-3 pb-4 border-b border-neutral-700">
+                        <h3 class="text-xs font-bold uppercase text-neutral-400">Ingredients Catalog</h3>
+                        <form id="ingredient-form" onsubmit="handleIngredientSubmit(event)" class="flex gap-2">
+                            <input type="text" id="ing-name" placeholder="New Ingredient Name" required class="flex-1 bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
+                            <button type="submit" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-3 py-1.5 rounded text-xs font-semibold">Add</button>
+                        </form>
+                        <div id="admin-ingredients-list" class="space-y-2 max-h-36 overflow-y-auto pr-1"></div>
+                    </div>
+
+                    <!-- Recipes / Potions Management -->
+                    <div class="space-y-3 pb-4 border-b border-neutral-700">
+                        <h3 class="text-xs font-bold uppercase text-neutral-400">Potion Recipes</h3>
+                        <form id="recipe-form" onsubmit="handleRecipeSubmit(event)" class="space-y-2">
+                            <input type="text" id="recipe-name" placeholder="Potion Name" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
+                            <div id="recipe-ingredients-container" class="space-y-1 bg-neutral-800 p-2 rounded border border-neutral-700 max-h-28 overflow-y-auto">
+                                <p class="text-xs text-neutral-400 italic">Add ingredients below</p>
+                            </div>
+                            <button type="button" onclick="addIngredientRowToRecipeForm()" class="text-xs text-neutral-300 hover:underline">+ Add Ingredient Requirement</button>
+                            <button type="submit" class="w-full mt-2 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 py-1.5 rounded text-xs font-semibold">Save Recipe</button>
+                        </form>
+                        <div id="admin-recipes-list" class="space-y-2 max-h-36 overflow-y-auto pr-1 mt-2"></div>
+                    </div>
+
+                    <!-- Log Price -->
+                    <form id="price-form" onsubmit="handlePriceSubmit(event)" class="space-y-2">
+                        <h3 class="text-xs font-bold uppercase text-neutral-400">Log / Update Price</h3>
+                        <select id="price-ingredient-select" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
+                            <option value="">Select Ingredient...</option>
+                        </select>
+                        <select id="price-location-select" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
+                            <option value="">Select Location...</option>
+                        </select>
+                        <input type="number" step="0.01" id="price-amount" placeholder="Price" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
+                        <button type="submit" class="w-full bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 py-1.5 rounded text-xs font-semibold">Record Price</button>
+                    </form>
+                </div>
+            </aside>
+
+        </div>
 
     </main>
 
@@ -188,17 +206,18 @@
             adminLocList.innerHTML = "";
 
             for (const [id, loc] of Object.entries(cachedLocations)) {
-                locSelect.innerHTML += `<option value="${id}">${loc.hold} > ${loc.town}</option>`;
+                locSelect.innerHTML += `<option value="${id}">${loc.hold} / ${loc.town}</option>`;
                 
                 adminLocList.innerHTML += `
-                    <div class="flex gap-2 items-center bg-neutral-950 p-1.5 rounded border border-neutral-800">
+                    <div class="flex gap-2 items-center bg-neutral-800 p-1.5 rounded border border-neutral-700">
                         <input type="text" id="edit-loc-hold-${id}" value="${loc.hold}" class="w-1/2 bg-neutral-900 border border-neutral-700 rounded px-1.5 py-1 text-xs text-white">
                         <input type="text" id="edit-loc-town-${id}" value="${loc.town}" class="w-1/2 bg-neutral-900 border border-neutral-700 rounded px-1.5 py-1 text-xs text-white">
-                        <button onclick="updateLocation('${id}')" class="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-2 py-1 rounded text-xs font-semibold">Save</button>
-                        <button onclick="deleteLocation('${id}')" class="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-400 px-2 py-1 rounded text-xs">✕</button>
+                        <button onclick="updateLocation('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-2 py-1 rounded text-xs font-semibold">Save</button>
+                        <button onclick="deleteLocation('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 text-neutral-300 px-2 py-1 rounded text-xs">✕</button>
                     </div>
                 `;
             }
+            renderCatalog();
             runOptimization();
         });
 
@@ -214,13 +233,14 @@
                 ingSelect.innerHTML += `<option value="${id}">${ing.name}</option>`;
                 
                 adminIngList.innerHTML += `
-                    <div class="flex gap-2 items-center bg-neutral-950 p-1.5 rounded border border-neutral-800">
+                    <div class="flex gap-2 items-center bg-neutral-800 p-1.5 rounded border border-neutral-700">
                         <input type="text" id="edit-ing-${id}" value="${ing.name}" class="flex-1 bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs text-white">
-                        <button onclick="updateIngredientName('${id}')" class="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-2 py-1 rounded text-xs font-semibold">Save</button>
-                        <button onclick="deleteIngredient('${id}')" class="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-400 px-2 py-1 rounded text-xs">✕</button>
+                        <button onclick="updateIngredientName('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-2 py-1 rounded text-xs font-semibold">Save</button>
+                        <button onclick="deleteIngredient('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 text-neutral-300 px-2 py-1 rounded text-xs">✕</button>
                     </div>
                 `;
             }
+            renderCatalog();
             runOptimization();
         });
 
@@ -228,18 +248,34 @@
             cachedRecipes = snapshot.val() || {};
             const recipeSelect = document.getElementById("simulator-recipe-select");
             recipeSelect.innerHTML = '<option value="">Select a Potion Recipe...</option>';
+            
+            const adminRecipeList = document.getElementById("admin-recipes-list");
+            adminRecipeList.innerHTML = "";
+
             for (const [id, rec] of Object.entries(cachedRecipes)) {
                 recipeSelect.innerHTML += `<option value="${id}">${rec.name}</option>`;
+                
+                adminRecipeList.innerHTML += `
+                    <div class="flex justify-between items-center bg-neutral-800 p-2 rounded border border-neutral-700 text-xs">
+                        <span class="font-medium text-neutral-200">${rec.name}</span>
+                        <div class="flex gap-1">
+                            <button onclick="openEditRecipeModal('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-2 py-1 rounded text-xs font-semibold">Edit</button>
+                            <button onclick="deleteRecipe('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 text-neutral-300 px-2 py-1 rounded text-xs">✕</button>
+                        </div>
+                    </div>
+                `;
             }
+            renderBatchQueue();
             runOptimization();
         });
 
         onValue(ref(db, 'prices'), (snapshot) => {
             cachedPrices = snapshot.val() || {};
+            renderCatalog();
             runOptimization();
         });
 
-        // Admin Actions: Locations
+        // Admin: Locations
         window.handleLocationSubmit = (e) => {
             e.preventDefault();
             push(ref(db, 'locations'), {
@@ -265,7 +301,7 @@
             }
         };
 
-        // Admin Actions: Ingredients
+        // Admin: Ingredients
         window.handleIngredientSubmit = (e) => {
             e.preventDefault();
             push(ref(db, 'ingredients'), {
@@ -283,12 +319,13 @@
         };
 
         window.deleteIngredient = (id) => {
-            if (confirm("Are you sure you want to delete this ingredient?")) {
+            if (confirm("Are you sure you want to delete this ingredient? All dependent records may be affected.")) {
                 remove(ref(db, `ingredients/${id}`))
                     .catch(err => alert("Error deleting ingredient: " + err.message));
             }
         };
 
+        // Admin: Recipes
         window.addIngredientRowToRecipeForm = () => {
             const container = document.getElementById("recipe-ingredients-container");
             const rowId = "row-" + Date.now();
@@ -320,10 +357,28 @@
             if (Object.keys(ingredients).length === 0) return alert("Add ingredients!");
             push(ref(db, 'recipes'), { name, ingredients });
             e.target.reset();
-            document.getElementById("recipe-ingredients-container").innerHTML = '<p class="text-xs text-neutral-500 italic">Add ingredients below</p>';
+            document.getElementById("recipe-ingredients-container").innerHTML = '<p class="text-xs text-neutral-400 italic">Add ingredients below</p>';
         };
 
-        // Price logging overwrites previous price per [ingredientId + locationId]
+        window.deleteRecipe = (id) => {
+            if (confirm("Are you sure you want to delete this potion recipe?")) {
+                remove(ref(db, `recipes/${id}`))
+                    .catch(err => alert("Error deleting recipe: " + err.message));
+            }
+        };
+
+        window.openEditRecipeModal = (id) => {
+            const rec = cachedRecipes[id];
+            if (!rec) return;
+            const newName = prompt("Edit Potion Name:", rec.name);
+            if (newName === null) return;
+            
+            update(ref(db, `recipes/${id}`), { name: newName.trim() || rec.name })
+                .then(() => alert("Potion updated successfully!"))
+                .catch(err => alert("Error: " + err.message));
+        };
+
+        // Price logging
         window.handlePriceSubmit = (e) => {
             e.preventDefault();
             const ingredientId = document.getElementById("price-ingredient-select").value;
@@ -331,7 +386,6 @@
             const price = parseFloat(document.getElementById("price-amount").value);
             const updatedAt = new Date().toISOString();
 
-            // Create a deterministic unique compound key to overwrite the exact entry per location/ingredient
             const priceKey = `${ingredientId}_${locationId}`;
             set(ref(db, `prices/${priceKey}`), {
                 ingredientId,
@@ -342,6 +396,64 @@
                 alert("Price recorded and updated!");
                 e.target.reset();
             }).catch(err => alert("Error saving price: " + err.message));
+        };
+
+        // Ingredient Catalog Search & Display
+        window.renderCatalog = () => {
+            const query = (document.getElementById("catalog-search").value || "").toLowerCase();
+            const container = document.getElementById("catalog-container");
+            
+            const filteredIngredients = Object.entries(cachedIngredients).filter(([id, ing]) => 
+                ing.name.toLowerCase().includes(query)
+            );
+
+            if (filteredIngredients.length === 0) {
+                container.innerHTML = '<p class="text-sm text-neutral-400 italic">No matching ingredients found.</p>';
+                return;
+            }
+
+            container.innerHTML = filteredIngredients.map(([ingId, ing]) => {
+                // Find all store prices for this ingredient
+                const offers = [];
+                for (const [key, p] of Object.entries(cachedPrices)) {
+                    if (p.ingredientId === ingId) offers.push(p);
+                }
+                offers.sort((a, b) => a.price - b.price);
+
+                let offersHtml = "";
+                if (offers.length === 0) {
+                    offersHtml = '<p class="text-xs text-neutral-500 italic">No locations have priced this ingredient yet.</p>';
+                } else {
+                    offersHtml = offers.map((offer, idx) => {
+                        const loc = cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
+                        const isCheapest = idx === 0;
+                        const rowStyle = isCheapest ? "bg-neutral-800 text-neutral-100 border border-neutral-600 font-medium" : "bg-neutral-900/50 text-neutral-400";
+                        
+                        let formattedDate = "Unknown";
+                        if (offer.updatedAt) {
+                            formattedDate = new Date(offer.updatedAt).toLocaleString([], { 
+                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                            });
+                        }
+
+                        return `
+                            <div class="flex justify-between items-center p-1.5 rounded text-xs ${rowStyle}">
+                                <span>${loc.hold} / ${loc.town} ${isCheapest ? '⭐ <strong>(Best)</strong>' : ''}</span>
+                                <span class="font-mono">${offer.price} Gold <span class="text-[10px] text-neutral-400">(${formattedDate})</span></span>
+                            </div>
+                        `;
+                    }).join("");
+                }
+
+                return `
+                    <div class="bg-neutral-800/60 border border-neutral-700 rounded-lg p-4 space-y-2">
+                        <h3 class="font-bold text-neutral-100 text-sm border-b border-neutral-700 pb-1">${ing.name}</h3>
+                        <div class="space-y-1 max-h-36 overflow-y-auto pr-1">
+                            ${offersHtml}
+                        </div>
+                    </div>
+                `;
+            }).join("");
         };
 
         // Batch Grouping Logic
@@ -369,7 +481,7 @@
         function renderBatchQueue() {
             const container = document.getElementById("batch-queue-list");
             if (currentBatch.length === 0) {
-                container.innerHTML = '<p class="text-sm text-neutral-500 italic">No potions added to batch yet.</p>';
+                container.innerHTML = '<p class="text-sm text-neutral-400 italic">No potions added to batch yet.</p>';
                 return;
             }
             container.innerHTML = currentBatch.map((item, idx) => {
@@ -383,7 +495,7 @@
             }).join("");
         }
 
-        // Optimization Engine with Dynamic Timezone Date Formatting
+        // Optimization Engine
         function runOptimization() {
             const totalDemands = {};
             currentBatch.forEach(item => {
@@ -398,7 +510,7 @@
             const totalCostDisplay = document.getElementById("total-batch-cost");
 
             if (Object.keys(totalDemands).length === 0) {
-                container.innerHTML = '<p class="text-sm text-neutral-500 italic">Add items to batch to view pricing breakdowns.</p>';
+                container.innerHTML = '<p class="text-sm text-neutral-400 italic">Add items to batch to view pricing breakdowns.</p>';
                 totalCostDisplay.textContent = "Total Optimal: 0 Gold";
                 return;
             }
@@ -411,11 +523,8 @@
                 
                 const storeOffers = [];
                 for (const [key, p] of Object.entries(cachedPrices)) {
-                    if (p.ingredientId === ingId) {
-                        storeOffers.push(p);
-                    }
+                    if (p.ingredientId === ingId) storeOffers.push(p);
                 }
-
                 storeOffers.sort((a, b) => a.price - b.price);
 
                 let bestSubtotal = 0;
@@ -425,7 +534,7 @@
                 }
 
                 html += `
-                    <div class="bg-neutral-900/40 border border-neutral-800 rounded-lg p-4">
+                    <div class="bg-neutral-800/40 border border-neutral-700 rounded-lg p-4">
                         <div class="flex justify-between items-center mb-2">
                             <span class="font-bold text-neutral-200">${ingMeta.name}</span>
                             <span class="text-sm bg-neutral-800 border border-neutral-700 px-2 py-0.5 rounded text-neutral-300">Needed: ${neededQty}</span>
@@ -440,17 +549,12 @@
                     storeOffers.forEach((offer, idx) => {
                         const loc = cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
                         const isCheapest = idx === 0;
-                        const rowStyle = isCheapest ? "bg-neutral-800/80 border border-neutral-600 text-neutral-100 font-medium" : "bg-neutral-950/40 text-neutral-400";
+                        const rowStyle = isCheapest ? "bg-neutral-800 border border-neutral-600 text-neutral-100 font-medium" : "bg-neutral-900/40 text-neutral-400";
                         
-                        let formattedDate = "Unknown date";
+                        let formattedDate = "Unknown";
                         if (offer.updatedAt) {
-                            const localDate = new Date(offer.updatedAt);
-                            formattedDate = localDate.toLocaleString([], { 
-                                year: 'numeric', 
-                                month: 'short', 
-                                day: 'numeric', 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
+                            formattedDate = new Date(offer.updatedAt).toLocaleString([], { 
+                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
                             });
                         }
 

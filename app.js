@@ -1,116 +1,135 @@
-// Import Firebase SDKs from CDN
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// TODO: Replace with your actual Firebase project configuration credentials
 const firebaseConfig = {
   apiKey: "AIzaSyDTQPUXzYr8UAawpvNce6wbXJC07-ZOmeo",
   authDomain: "alchemy-price-tracker.firebaseapp.com",
+  databaseURL: "https://alchemy-price-tracker-default-rtdb.firebaseio.com",
   projectId: "alchemy-price-tracker",
   storageBucket: "alchemy-price-tracker.firebasestorage.app",
   messagingSenderId: "357962236614",
-  appId: "1:357962236614:web:770c78966226a35f138dc7"
+  appId: "1:357962236614:web:770c78966226a35f138dc7",
+  measurementId: "G-J94V9BMR1Q"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
 
-// Global Application State Maps
 let cachedRecipes = {};
 let cachedIngredients = {};
 let cachedLocations = {};
 let cachedPrices = [];
-let currentBatch = []; // Array of { recipeId, count }
+let currentBatch = [];
 
-// --- Authentication UI Controls ---
-window.toggleAuth = async () => {
-    if (auth.currentUser) {
-        await signOut(auth);
-    } else {
-        try {
-            await signInWithPopup(auth, provider);
-        } catch (error) {
-            console.error("Auth failed:", error);
-        }
+// --- Email & Password Auth ---
+window.handleLogin = async () => {
+    const email = document.getElementById("auth-email").value;
+    const password = document.getElementById("auth-password").value;
+    if (!email || !password) return alert("Please enter email and password.");
+
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+        console.error("Login failed:", error);
+        alert("Authentication failed: " + error.message);
     }
 };
 
-onAuthStateChanged(auth, (user) => {
-    const display = document.getElementById("user-display");
-    const btn = document.getElementById("auth-btn");
+window.handleSignOut = async () => {
+    await signOut(auth);
+};
+
+onAuthStateChanged(auth, async (user) => {
+    const loggedOutView = document.getElementById("logged-out-view");
+    const loggedInView = document.getElementById("logged-in-view");
+    const userDisplay = document.getElementById("user-display");
+    const adminPanel = document.getElementById("admin-panel");
+
     if (user) {
-        display.textContent = user.displayName;
-        btn.textContent = "Sign Out";
-        btn.className = "bg-rose-600 hover:bg-rose-500 px-4 py-1.5 rounded text-sm font-semibold transition";
+        loggedOutView.classList.add("hidden");
+        loggedInView.classList.remove("hidden");
+        userDisplay.textContent = user.email;
+
+        // Check if user has admin privileges from Firestore user profile document
+        try {
+            const userDocRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userDocRef);
+            if (userSnap.exists() && userSnap.data().isAdmin === true) {
+                adminPanel.classList.remove("hidden");
+            } else {
+                adminPanel.classList.add("hidden");
+            }
+        } catch (err) {
+            console.error("Error checking admin status:", err);
+            adminPanel.classList.add("hidden");
+        }
     } else {
-        display.textContent = "Not signed in";
-        btn.textContent = "Sign In";
-        btn.className = "bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 rounded text-sm font-semibold transition";
+        loggedOutView.classList.remove("hidden");
+        loggedInView.classList.add("hidden");
+        adminPanel.classList.add("hidden");
     }
 });
 
-// --- Data Listeners & Real-time Sync ---
+// --- Real-time Listeners ---
 function initRealtimeListeners() {
-    // Listen to Locations
     onSnapshot(collection(db, "locations"), (snapshot) => {
         cachedLocations = {};
         const locSelect = document.getElementById("price-location-select");
-        locSelect.innerHTML = '<option value="">Select Location...</option>';
+        if (locSelect) locSelect.innerHTML = '<option value="">Select Location...</option>';
         
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            cachedLocations[doc.id] = data;
-            locSelect.innerHTML += `<option value="${doc.id}">${data.hold} > ${data.city} > ${data.storeName}</option>`;
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            cachedLocations[docSnap.id] = data;
+            if (locSelect) {
+                locSelect.innerHTML += `<option value="${docSnap.id}">${data.hold} > ${data.city} > ${data.storeName}</option>`;
+            }
         });
         runOptimization();
     });
 
-    // Listen to Ingredients
     onSnapshot(collection(db, "ingredients"), (snapshot) => {
         cachedIngredients = {};
         const ingSelect = document.getElementById("price-ingredient-select");
-        ingSelect.innerHTML = '<option value="">Select Ingredient...</option>';
+        if (ingSelect) ingSelect.innerHTML = '<option value="">Select Ingredient...</option>';
 
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            cachedIngredients[doc.id] = data;
-            ingSelect.innerHTML += `<option value="${doc.id}">${data.name}</option>`;
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            cachedIngredients[docSnap.id] = data;
+            if (ingSelect) {
+                ingSelect.innerHTML += `<option value="${docSnap.id}">${data.name} (${data.unit})</option>`;
+            }
         });
+        updateRecipeFormIngredientDropdowns();
         runOptimization();
     });
 
-    // Listen to Recipes
     onSnapshot(collection(db, "recipes"), (snapshot) => {
         cachedRecipes = {};
         const recipeSelect = document.getElementById("simulator-recipe-select");
         recipeSelect.innerHTML = '<option value="">Select a Potion Recipe...</option>';
 
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            cachedRecipes[doc.id] = data;
-            recipeSelect.innerHTML += `<option value="${doc.id}">${data.name}</option>`;
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            cachedRecipes[docSnap.id] = data;
+            recipeSelect.innerHTML += `<option value="${docSnap.id}">${data.name}</option>`;
         });
+        runOptimization();
     });
 
-    // Listen to Prices
     onSnapshot(collection(db, "ingredientPrices"), (snapshot) => {
         cachedPrices = [];
-        snapshot.forEach((doc) => {
-            cachedPrices.push({ id: doc.id, ...doc.data() });
+        snapshot.forEach((docSnap) => {
+            cachedPrices.push({ id: docSnap.id, ...docSnap.data() });
         });
         runOptimization();
     });
 }
 
-// --- Admin Data Handlers ---
+// --- Admin Form Handlers ---
 window.handleLocationSubmit = async (e) => {
     e.preventDefault();
-    if (!auth.currentUser) return alert("You must be signed in to add locations.");
-    
     try {
         await addDoc(collection(db, "locations"), {
             hold: document.getElementById("loc-hold").value.trim(),
@@ -119,17 +138,79 @@ window.handleLocationSubmit = async (e) => {
             createdAt: new Date()
         });
         document.getElementById("location-form").reset();
-        alert("Location added successfully!");
+        alert("Location added!");
     } catch (err) {
-        console.error(err);
-        alert("Error saving location.");
+        alert("Error: " + err.message);
+    }
+};
+
+window.handleIngredientSubmit = async (e) => {
+    e.preventDefault();
+    try {
+        await addDoc(collection(db, "ingredients"), {
+            name: document.getElementById("ing-name").value.trim(),
+            unit: document.getElementById("ing-unit").value.trim(),
+            createdAt: new Date()
+        });
+        document.getElementById("ingredient-form").reset();
+        alert("Ingredient added!");
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+};
+
+window.addIngredientRowToRecipeForm = () => {
+    const container = document.getElementById("recipe-ingredients-container");
+    const rowId = "ing-row-" + Date.now();
+    
+    let optionsHtml = '<option value="">Select Ingredient...</option>';
+    for (const [id, ing] of Object.entries(cachedIngredients)) {
+        optionsHtml += `<option value="${id}">${ing.name}</option>`;
+    }
+
+    const div = document.createElement("div");
+    div.id = rowId;
+    div.className = "flex gap-2 items-center mt-1";
+    div.innerHTML = `
+        <select class="recipe-ing-select flex-1 bg-slate-900 border border-slate-700 rounded p-1 text-xs" required>${optionsHtml}</select>
+        <input type="number" step="0.1" placeholder="Qty" class="recipe-ing-qty w-16 bg-slate-900 border border-slate-700 rounded p-1 text-xs" required>
+        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-400 font-bold text-xs">X</button>
+    `;
+    container.appendChild(div);
+};
+
+function updateRecipeFormIngredientDropdowns() {
+    // Keeps dynamic ingredient lists updated in recipe builder if needed
+}
+
+window.handleRecipeSubmit = async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("recipe-name").value.trim();
+    const rows = document.querySelectorAll("#recipe-ingredients-container > div");
+    
+    const ingredients = [];
+    rows.forEach(row => {
+        const ingId = row.querySelector(".recipe-ing-select").value;
+        const qty = parseFloat(row.querySelector(".recipe-ing-qty").value);
+        if (ingId && qty) {
+            ingredients.push({ ingredientId: ingId, quantity: qty });
+        }
+    });
+
+    if (ingredients.length === 0) return alert("Add at least one ingredient requirement for the recipe.");
+
+    try {
+        await addDoc(collection(db, "recipes"), { name, ingredients, createdAt: new Date() });
+        document.getElementById("recipe-form").reset();
+        document.getElementById("recipe-ingredients-container.innerHTML").innerHTML = '';
+        alert("Recipe saved successfully!");
+    } catch (err) {
+        alert("Error saving recipe: " + err.message);
     }
 };
 
 window.handlePriceSubmit = async (e) => {
     e.preventDefault();
-    if (!auth.currentUser) return alert("You must be signed in to log prices.");
-
     try {
         await addDoc(collection(db, "ingredientPrices"), {
             ingredientId: document.getElementById("price-ingredient-select").value,
@@ -138,14 +219,13 @@ window.handlePriceSubmit = async (e) => {
             updatedAt: new Date()
         });
         document.getElementById("price-form").reset();
-        alert("Price point logged successfully!");
+        alert("Price recorded!");
     } catch (err) {
-        console.error(err);
-        alert("Error logging price.");
+        alert("Error logging price: " + err.message);
     }
 };
 
-// --- Batch Simulator Engine ---
+// --- Simulator Logic ---
 window.addRecipeToBatch = () => {
     const recipeId = document.getElementById("simulator-recipe-select").value;
     const count = parseInt(document.getElementById("simulator-qty").value);
@@ -181,7 +261,6 @@ window.removeBatchItem = (index) => {
 };
 
 function runOptimization() {
-    // 1. Aggregate Demands
     const totalDemands = {};
     currentBatch.forEach(item => {
         const recipe = cachedRecipes[item.recipeId];
@@ -192,7 +271,6 @@ function runOptimization() {
         });
     });
 
-    // 2. Find Best Prices across cachedPrices
     const resultsBody = document.getElementById("optimization-results-body");
     const totalCostDisplay = document.getElementById("total-batch-cost");
     
@@ -207,8 +285,6 @@ function runOptimization() {
 
     for (const [ingId, neededQty] of Object.entries(totalDemands)) {
         const ingredientMeta = cachedIngredients[ingId] || { name: "Unknown Ingredient" };
-        
-        // Filter prices matching this ingredient
         const availableOffers = cachedPrices.filter(p => p.ingredientId === ingId);
 
         if (availableOffers.length === 0) {
@@ -223,7 +299,6 @@ function runOptimization() {
             continue;
         }
 
-        // Sort ascending by unit price
         availableOffers.sort((a, b) => a.price - b.price);
         const bestOffer = availableOffers[0];
         const locationMeta = cachedLocations[bestOffer.locationId] || { hold: "", city: "", storeName: "Unknown" };
@@ -245,5 +320,4 @@ function runOptimization() {
     totalCostDisplay.textContent = `Total: ${overallTotal.toFixed(2)} Gold`;
 }
 
-// Start listeners on boot
 initRealtimeListeners();

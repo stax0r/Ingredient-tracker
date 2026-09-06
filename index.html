@@ -18,7 +18,6 @@
                 <button onclick="openAdminModal('locations')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">📍 Locations</button>
                 <button onclick="openAdminModal('ingredients')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">🌿 Ingredients</button>
                 <button onclick="openAdminModal('recipes')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">📜 Potions</button>
-                <button onclick="openAdminModal('prices')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">💰 Log Price</button>
             </div>
 
             <!-- Auth View -->
@@ -38,6 +37,41 @@
 
     <!-- Main Container (Expanded for Public Focus) -->
     <main class="max-w-7xl mx-auto p-6 space-y-6">
+
+        <!-- Top Section: Quick Price Logger & Guest Contribution Trigger -->
+        <section class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-red-950 pb-3">
+                <div>
+                    <h2 class="text-lg font-semibold text-red-100" id="price-logger-heading">Record Ingredient Price</h2>
+                    <p class="text-xs text-red-400" id="price-logger-subtext">Log or update live market pricing across discovered realms.</p>
+                </div>
+                <!-- Guest Webhook Request Button (Visible only when logged out) -->
+                <button id="guest-contrib-btn" onclick="openGuestModal()" class="hidden bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition flex items-center gap-1.5">
+                    📢 Suggest Location / Price Change via Discord
+                </button>
+            </div>
+
+            <!-- Direct Price Logger Form (Admin/Direct mode or standard interface) -->
+            <form id="direct-price-form" onsubmit="handlePriceSubmit(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase font-bold text-red-400">Ingredient</label>
+                    <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                        <option value="">Select Ingredient...</option>
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase font-bold text-red-400">Location</label>
+                    <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                        <option value="">Select Location...</option>
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase font-bold text-red-400">Price (Gold)</label>
+                    <input type="number" step="0.01" id="price-amount" placeholder="0.00" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                </div>
+                <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white transition">Record Price</button>
+            </form>
+        </section>
 
         <!-- Primary Feature: Ingredient Price Catalog & Search -->
         <section class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
@@ -106,6 +140,62 @@
         </div>
     </div>
 
+    <!-- Guest Discord Webhook Request Modal -->
+    <div id="guest-modal" class="hidden fixed inset-0 bg-black/80 flex justify-center items-center p-4 z-50">
+        <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-red-950 pb-2">
+                <h2 class="text-lg font-bold text-red-100">Suggest Update via Discord</h2>
+                <button onclick="closeGuestModal()" class="text-red-400 hover:text-white font-bold text-sm">✕</button>
+            </div>
+            <p class="text-xs text-red-300">Submit new locations or price adjustments. This will dispatch a notification to our Discord webhook for verification.</p>
+            
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase font-bold text-red-400">Contribution Type</label>
+                    <select id="guest-contrib-type" onchange="toggleGuestFormFields()" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <option value="price">Price Change / New Price Offer</option>
+                        <option value="location">New Location Suggestion</option>
+                    </select>
+                </div>
+
+                <!-- Fields for Price Change -->
+                <div id="guest-price-fields" class="space-y-3">
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase font-bold text-red-400">Ingredient</label>
+                        <select id="guest-ingredient-select" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase font-bold text-red-400">Location</label>
+                        <select id="guest-location-select" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase font-bold text-red-400">Proposed Price (Gold)</label>
+                        <input type="number" step="0.01" id="guest-price-amount" placeholder="0.00" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    </div>
+                </div>
+
+                <!-- Fields for Location Suggestion -->
+                <div id="guest-location-fields" class="space-y-3 hidden">
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase font-bold text-red-400">Hold / Region</label>
+                        <input type="text" id="guest-loc-hold" placeholder="e.g. Whiterun Hold" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase font-bold text-red-400">Town / Settlement</label>
+                        <input type="text" id="guest-loc-town" placeholder="e.g. Riverwood" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase font-bold text-red-400">Your Alchemist Name / Discord Handle (Optional)</label>
+                    <input type="text" id="guest-author" placeholder="e.g. Alchemist#1234" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                </div>
+
+                <button onclick="submitGuestWebhookRequest()" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white transition">Send Request to Discord</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Edit Potion Modal -->
     <div id="edit-recipe-modal" class="hidden fixed inset-0 bg-black/80 flex justify-center items-center p-4 z-50">
         <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl">
@@ -144,6 +234,9 @@
   measurementId: "G-J94V9BMR1Q"
         };
 
+        // REPLACE WITH YOUR ACTUAL DISCORD WEBHOOK URL
+        const DISCORD_WEBHOOK_URL = "Yhttps://discord.com/api/webhooks/1546052671788814367/16i9QCmlLHI-_n8wjW_V-Vdyu0CpqvO4EVH_uNNGa9GcQh0SbHGSC7k2Pr8NR7FWVWkA";
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
@@ -171,15 +264,19 @@
             const outView = document.getElementById("logged-out-view");
             const inView = document.getElementById("logged-in-view");
             const adminToggles = document.getElementById("admin-toggles");
+            const guestContribBtn = document.getElementById("guest-contrib-btn");
+
             if (user) {
                 outView.classList.add("hidden");
                 inView.classList.remove("hidden");
                 document.getElementById("user-display").textContent = user.email;
                 adminToggles.classList.remove("hidden");
+                guestContribBtn.classList.add("hidden");
             } else {
                 outView.classList.remove("hidden");
                 inView.classList.add("hidden");
                 adminToggles.classList.add("hidden");
+                guestContribBtn.classList.remove("hidden");
                 closeAdminModal();
             }
         });
@@ -187,18 +284,27 @@
         // Real-time Database Listeners
         onValue(ref(db, 'locations'), (snapshot) => {
             cachedLocations = snapshot.val() || {};
-            const locSelect = document.getElementById("price-location-select");
-            if (locSelect) locSelect.innerHTML = '<option value="">Select Location...</option>';
             
-            const sortedLocations = Object.entries(cachedLocations).sort((a, b) => {
-                const textA = `${a[1].hold} / ${a[1].town}`.toLowerCase();
-                const textB = `${b[1].hold} / ${b[1].town}`.toLowerCase();
-                return textA.localeCompare(textB);
+            // Populate select dropdowns
+            const locSelects = [
+                document.getElementById("price-location-select"),
+                document.getElementById("guest-location-select")
+            ];
+            
+            locSelects.forEach(sel => {
+                if (sel) {
+                    sel.innerHTML = '<option value="">Select Location...</option>';
+                    const sortedLocations = Object.entries(cachedLocations).sort((a, b) => {
+                        const textA = `${a[1].hold} / ${a[1].town}`.toLowerCase();
+                        const textB = `${b[1].hold} / ${b[1].town}`.toLowerCase();
+                        return textA.localeCompare(textB);
+                    });
+                    for (const [id, loc] of sortedLocations) {
+                        sel.innerHTML += `<option value="${id}">${loc.hold} / ${loc.town}</option>`;
+                    }
+                }
             });
 
-            for (const [id, loc] of sortedLocations) {
-                if (locSelect) locSelect.innerHTML += `<option value="${id}">${loc.hold} / ${loc.town}</option>`;
-            }
             if (document.getElementById("admin-modal").classList.contains("flex") && activeAdminTab === 'locations') {
                 renderAdminModalContent('locations');
             }
@@ -208,16 +314,25 @@
 
         onValue(ref(db, 'ingredients'), (snapshot) => {
             cachedIngredients = snapshot.val() || {};
-            const ingSelect = document.getElementById("price-ingredient-select");
-            if (ingSelect) ingSelect.innerHTML = '<option value="">Select Ingredient...</option>';
             
-            const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => 
-                a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
-            );
+            // Populate select dropdowns
+            const ingSelects = [
+                document.getElementById("price-ingredient-select"),
+                document.getElementById("guest-ingredient-select")
+            ];
 
-            for (const [id, ing] of sortedIngredients) {
-                if (ingSelect) ingSelect.innerHTML += `<option value="${id}">${ing.name}</option>`;
-            }
+            ingSelects.forEach(sel => {
+                if (sel) {
+                    sel.innerHTML = '<option value="">Select Ingredient...</option>';
+                    const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => 
+                        a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
+                    );
+                    for (const [id, ing] of sortedIngredients) {
+                        sel.innerHTML += `<option value="${id}">${ing.name}</option>`;
+                    }
+                }
+            });
+
             if (document.getElementById("admin-modal").classList.contains("flex") && activeAdminTab === 'ingredients') {
                 renderAdminModalContent('ingredients');
             }
@@ -256,8 +371,7 @@
             const titles = {
                 locations: "📍 Manage Locations",
                 ingredients: "🌿 Manage Ingredients Catalog",
-                recipes: "📜 Manage Potion Recipes",
-                prices: "💰 Log / Update Price"
+                recipes: "📜 Manage Potion Recipes"
             };
             document.getElementById("admin-modal-title").textContent = titles[tab];
             renderAdminModalContent(tab);
@@ -268,6 +382,86 @@
         window.closeAdminModal = () => {
             document.getElementById("admin-modal").classList.remove("flex");
             document.getElementById("admin-modal").classList.add("hidden");
+        };
+
+        // Guest Modal Controls
+        window.openGuestModal = () => {
+            document.getElementById("guest-modal").classList.remove("hidden");
+            document.getElementById("guest-modal").classList.add("flex");
+        };
+
+        window.closeGuestModal = () => {
+            document.getElementById("guest-modal").classList.remove("flex");
+            document.getElementById("guest-modal").classList.add("hidden");
+        };
+
+        window.toggleGuestFormFields = () => {
+            const type = document.getElementById("guest-contrib-type").value;
+            const priceFields = document.getElementById("guest-price-fields");
+            const locFields = document.getElementById("guest-location-fields");
+            if (type === 'price') {
+                priceFields.classList.remove("hidden");
+                locFields.classList.add("hidden");
+            } else {
+                priceFields.classList.add("hidden");
+                locFields.classList.remove("hidden");
+            }
+        };
+
+        // Discord Webhook integration for Guests
+        window.submitGuestWebhookRequest = async () => {
+            const type = document.getElementById("guest-contrib-type").value;
+            const author = document.getElementById("guest-author").value.trim() || "Anonymous Alchemist";
+            
+            let contentMessage = "";
+
+            if (type === 'price') {
+                const ingSelect = document.getElementById("guest-ingredient-select");
+                const locSelect = document.getElementById("guest-location-select");
+                const priceVal = document.getElementById("guest-price-amount").value;
+
+                const ingredientName = ingSelect.options[ingSelect.selectedIndex]?.text || "Unknown";
+                const locationName = locSelect.options[locSelect.selectedIndex]?.text || "Unknown";
+
+                if (!ingSelect.value || !locSelect.value || !priceVal) {
+                    return alert("Please fill out all price contribution fields.");
+                }
+
+                contentMessage = `💰 **Price Suggestion Request**\n• **Suggested By:** ${author}\n• **Ingredient:** ${ingredientName}\n• **Location:** ${locationName}\n• **Proposed Price:** ${priceVal} Gold`;
+            } else {
+                const hold = document.getElementById("guest-loc-hold").value.trim();
+                const town = document.getElementById("guest-loc-town").value.trim();
+
+                if (!hold || !town) {
+                    return alert("Please fill out both hold and town fields.");
+                }
+
+                contentMessage = `📍 **New Location Suggestion Request**\n• **Suggested By:** ${author}\n• **Hold / Region:** ${hold}\n• **Town / Settlement:** ${town}`;
+            }
+
+            if (DISCORD_WEBHOOK_URL.includes("YOUR_DISCORD_WEBHOOK_URL_HERE")) {
+                alert("Webhook simulated successfully! (Note: Configure your actual DISCORD_WEBHOOK_URL in the script to send live payloads).");
+                closeGuestModal();
+                return;
+            }
+
+            try {
+                const response = await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: contentMessage })
+                });
+
+                if (response.ok || response.type === 'opaque') {
+                    alert("Your request has been successfully dispatched to Discord for review!");
+                    closeGuestModal();
+                } else {
+                    alert("Failed to send webhook request. Please try again later.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error connecting to Discord webhook: " + err.message);
+            }
         };
 
         function renderAdminModalContent(tab) {
@@ -342,27 +536,6 @@
                     </form>
                     <div class="space-y-2 max-h-48 overflow-y-auto pr-1">${listHtml || '<p class="text-xs text-red-400 italic">No recipes found.</p>'}</div>
                 `;
-            } else if (tab === 'prices') {
-                let ingredientOptions = '<option value="">Select Ingredient...</option>';
-                const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
-                for (const [id, ing] of sortedIngredients) {
-                    ingredientOptions += `<option value="${id}">${ing.name}</option>`;
-                }
-
-                let locationOptions = '<option value="">Select Location...</option>';
-                const sortedLocations = Object.entries(cachedLocations).sort((a, b) => `${a[1].hold}/${a[1].town}`.toLowerCase().localeCompare(`${b[1].hold}/${b[1].town}`.toLowerCase()));
-                for (const [id, loc] of sortedLocations) {
-                    locationOptions += `<option value="${id}">${loc.hold} / ${loc.town}</option>`;
-                }
-
-                container.innerHTML = `
-                    <form id="price-form" onsubmit="handlePriceSubmit(event)" class="space-y-3">
-                        <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">${ingredientOptions}</select>
-                        <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">${locationOptions}</select>
-                        <input type="number" step="0.01" id="price-amount" placeholder="Price" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                        <button type="submit" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white">Record Price</button>
-                    </form>
-                `;
             }
         }
 
@@ -387,7 +560,6 @@
 
         window.deleteLocation = (id) => {
             if (confirm("Are you sure you want to delete this location?")) {
-                // Clean up associated prices
                 const updates = {};
                 updates[`locations/${id}`] = null;
                 for (const [pKey, pVal] of Object.entries(cachedPrices)) {
@@ -421,7 +593,6 @@
             if (confirm("Are you sure you want to delete this ingredient? All older prices and dependent records will be cleaned up.")) {
                 const updates = {};
                 updates[`ingredients/${id}`] = null;
-                // Delete associated prices
                 for (const [pKey, pVal] of Object.entries(cachedPrices)) {
                     if (pVal.ingredientId === id) {
                         updates[`prices/${pKey}`] = null;
@@ -548,7 +719,7 @@
             }).catch(err => alert("Error saving price: " + err.message));
         };
 
-        // Ingredient Catalog Search & Display (Fixed height container with internal scroll)
+        // Ingredient Catalog Search & Display
         window.renderCatalog = () => {
             const query = (document.getElementById("catalog-search").value || "").toLowerCase();
             const container = document.getElementById("catalog-container");

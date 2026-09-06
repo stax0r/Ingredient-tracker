@@ -13,7 +13,7 @@
         <header class="bg-zinc-900 border-b border-red-950 p-4 flex flex-col md:flex-row justify-between items-center gap-3 shadow-lg">
             <div class="flex flex-col items-start">
                 <h1 class="text-xl font-bold tracking-wider text-red-500 flex items-center gap-2">
-                    🧪 The Material Index <span class="text-[10px] bg-red-950 border border-red-900 px-2 py-0.5 rounded text-red-300 font-normal">Solitude Alchemist Guild</span>
+                    🧪 The Material Index
                 </h1>
                 <span class="text-[10px] text-red-400/80 italic mt-0.5">Crafted by Loic Sauvage</span>
             </div>
@@ -28,7 +28,7 @@
 
                 <!-- Guest Contribution Button (Visible only when logged out) -->
                 <button id="guest-contrib-btn" onclick="openGuestModal()" class="hidden bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition flex items-center gap-1.5">
-                    ✉️ Dispatch Scribe Request
+                    Leave a missive with the latest valuation.
                 </button>
 
                 <!-- Auth View -->
@@ -141,8 +141,20 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-zinc-900 border-t border-red-950 py-4 px-6 text-center text-xs text-red-400 mt-12">
-        OOC: Whether you have questions, feedback, or just need to get in touch, please feel free to drop me a message on Discord at <code class="bg-zinc-950 border border-red-950 text-red-300 px-1.5 py-0.5 rounded font-mono text-[11px]">stax0r</code>. Always happy to help!
+    <footer class="bg-zinc-900 border-t border-red-950 py-6 px-6 text-center space-y-4 mt-12">
+        <!-- Guild Identification & Seal Container -->
+        <div class="flex flex-col items-center justify-center space-y-1">
+            <span class="text-xs font-semibold uppercase tracking-widest text-red-400/90">Solitude Alchemist Guild</span>
+            <span class="text-[10px] text-red-500/60 italic">Restricted Ledger — For Guild Members Only</span>
+            <!-- Guild Seal Placement Container -->
+            <div id="guild-seal-container" class="mt-2 w-16 h-16 border border-dashed border-red-900/60 rounded-full flex items-center justify-center text-[10px] text-red-500/40 italic">
+                [Guild Seal]
+            </div>
+        </div>
+
+        <div class="text-xs text-red-400 pt-2 border-t border-red-950/60 max-w-xl mx-auto">
+            OOC: Whether you have questions, feedback, or just need to get in touch, please feel free to drop me a message on Discord at <code class="bg-zinc-950 border border-red-950 text-red-300 px-1.5 py-0.5 rounded font-mono text-[11px]">stax0r</code>. Always happy to help!
+        </div>
     </footer>
 
     <!-- Generic Admin Modal -->

@@ -13,7 +13,7 @@
         <header class="bg-zinc-900 border-b border-red-950 p-4 flex flex-col md:flex-row justify-between items-center gap-3 shadow-lg">
             <div class="flex flex-col items-start">
                 <h1 class="text-xl font-bold tracking-wider text-red-500 flex items-center gap-2">
-                    🧪 The Material Index
+                    The Material Index
                 </h1>
                 <span class="text-[10px] text-red-400/80 italic mt-0.5">Crafted by Loic Sauvage</span>
             </div>
@@ -151,12 +151,10 @@
         <div class="text-xs text-red-400 pt-2 border-t border-red-950/60 max-w-xl mx-auto">
             OOC: Whether you have questions, feedback, or just need to get in touch, please feel free to drop me a message on Discord at <code class="bg-zinc-950 border border-red-950 text-red-300 px-1.5 py-0.5 rounded font-mono text-[11px]">stax0r</code>. Always happy to help!
         </div>
-        
-        <!-- Guild Seal Placement Container -->
-        <div id="guild-seal-container" class="mt-4 mx-auto w-16 h-16 border border-dashed border-red-900/60 rounded-full flex items-center justify-center text-[10px] text-red-500/40 italic">
-            [Guild Seal]
-        </div>
     </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- Generic Admin Modal -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-black/80 flex justify-center items-center p-4 z-50">
@@ -294,17 +292,49 @@
         let currentBatch = [];
         let activeAdminTab = 'locations';
 
+        // Toast Notification System
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            
+            const bgColors = {
+                success: "bg-zinc-900 border-red-800 text-red-100",
+                error: "bg-red-950 border-red-700 text-red-100",
+                info: "bg-zinc-900 border-zinc-700 text-zinc-100"
+            };
+
+            toast.className = `pointer-events-auto px-4 py-3 rounded-lg border shadow-xl text-xs flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 ${bgColors[type] || bgColors.success}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove("translate-y-2", "opacity-0");
+            }, 10);
+
+            // Auto-dismiss after 3.5 seconds
+            setTimeout(() => {
+                toast.classList.add("translate-y-2", "opacity-0");
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        };
+
         window.handleLogin = async () => {
             const email = document.getElementById("auth-email").value;
             const password = document.getElementById("auth-password").value;
             try {
                 await signInWithEmailAndPassword(auth, email, password);
+                showToast("Successfully signed in!", "success");
             } catch (err) {
-                alert("Login error: " + err.message);
+                showToast("Login error: " + err.message, "error");
             }
         };
 
-        window.handleSignOut = () => signOut(auth);
+        window.handleSignOut = () => {
+            signOut(auth);
+            showToast("Signed out successfully.", "info");
+        };
 
         onAuthStateChanged(auth, (user) => {
             const outView = document.getElementById("logged-out-view");
@@ -481,7 +511,7 @@
                 const locationName = locSelect.options[locSelect.selectedIndex]?.text || "Unknown";
 
                 if (!ingSelect.value || !locSelect.value || !priceVal) {
-                    return alert("Please fill out all price update fields.");
+                    return showToast("Please fill out all price update fields.", "error");
                 }
 
                 contentMessage = `💰 **Price Update**\n• **Submitted By:** ${author}\n• **Ingredient:** ${ingredientName}\n• **Location:** ${locationName}\n• **Last Seen Price:** ${priceVal} Gold`;
@@ -490,21 +520,21 @@
                 const town = document.getElementById("guest-loc-town").value.trim();
 
                 if (!hold || !town) {
-                    return alert("Please fill out both hold and town fields.");
+                    return showToast("Please fill out both hold and town fields.", "error");
                 }
 
                 contentMessage = `📍 **New Location Discovery Request**\n• **Submitted By:** ${author}\n• **Hold / Region:** ${hold}\n• **Town / Settlement:** ${town}`;
             } else {
                 const letterText = document.getElementById("guest-letter-content").value.trim();
                 if (!letterText) {
-                    return alert("Please write your letter before sealing it.");
+                    return showToast("Please write your letter before sealing it.", "error");
                 }
 
                 contentMessage = `📜 **A Sealed Letter**\n• **From:** ${author}\n\n"${letterText}"`;
             }
 
             if (DISCORD_WEBHOOK_URL.includes("YOUR_DISCORD_WEBHOOK_URL_HERE")) {
-                alert("Your missive has been placed on the desk for review! (Configure your DISCORD_WEBHOOK_URL to transmit live owls).");
+                showToast("Your missive has been placed onটো the desk for review!", "success");
                 closeGuestModal();
                 return;
             }
@@ -517,14 +547,14 @@
                 });
 
                 if (response.ok || response.type === 'opaque') {
-                    alert("Your missive has been successfully dispatched to the guild scribes!");
+                    showToast("Your missive has been successfully dispatched to the guild scribes!", "success");
                     closeGuestModal();
                 } else {
-                    alert("Failed to dispatch your note. Please try again later.");
+                    showToast("Failed to dispatch your note. Please try again later.", "error");
                 }
             } catch (err) {
                 console.error(err);
-                alert("Error dispatching missive: " + err.message);
+                showToast("Error dispatching missive: " + err.message, "error");
             }
         };
 
@@ -610,16 +640,17 @@
                 hold: document.getElementById("loc-hold").value.trim(),
                 town: document.getElementById("loc-town").value.trim()
             });
+            showToast("Location added successfully!", "success");
             e.target.reset();
         };
 
         window.updateLocation = (id) => {
             const hold = document.getElementById(`edit-loc-hold-${id}`).value.trim();
             const town = document.getElementById(`edit-loc-town-${id}`).value.trim();
-            if (!hold || !town) return alert("Fields cannot be empty.");
+            if (!hold || !town) return showToast("Fields cannot be empty.", "error");
             update(ref(db, `locations/${id}`), { hold, town })
-                .then(() => alert("Location updated!"))
-                .catch(err => alert("Error: " + err.message));
+                .then(() => showToast("Location updated!", "success"))
+                .catch(err => showToast("Error: " + err.message, "error"));
         };
 
         window.deleteLocation = (id) => {
@@ -632,7 +663,8 @@
                     }
                 }
                 update(ref(db), updates)
-                    .catch(err => alert("Error deleting location: " + err.message));
+                    .then(() => showToast("Location deleted.", "info"))
+                    .catch(err => showToast("Error deleting location: " + err.message, "error"));
             }
         };
 
@@ -642,15 +674,16 @@
             push(ref(db, 'ingredients'), {
                 name: document.getElementById("ing-name").value.trim()
             });
+            showToast("Ingredient added successfully!", "success");
             e.target.reset();
         };
 
         window.updateIngredientName = (id) => {
             const newName = document.getElementById(`edit-ing-${id}`).value.trim();
-            if (!newName) return alert("Name cannot be empty.");
+            if (!newName) return showToast("Name cannot be empty.", "error");
             update(ref(db, `ingredients/${id}`), { name: newName })
-                .then(() => alert("Ingredient updated!"))
-                .catch(err => alert("Error: " + err.message));
+                .then(() => showToast("Ingredient updated!", "success"))
+                .catch(err => showToast("Error: " + err.message, "error"));
         };
 
         window.deleteIngredient = (id) => {
@@ -663,7 +696,8 @@
                     }
                 }
                 update(ref(db), updates)
-                    .catch(err => alert("Error deleting ingredient: " + err.message));
+                    .then(() => showToast("Ingredient deleted.", "info"))
+                    .catch(err => showToast("Error deleting ingredient: " + err.message, "error"));
             }
         };
 
@@ -705,8 +739,9 @@
                 const qty = parseFloat(r.querySelector(".recipe-ing-qty").value);
                 if (id && qty) ingredients[id] = qty;
             });
-            if (Object.keys(ingredients).length === 0) return alert("Add ingredients!");
+            if (Object.keys(ingredients).length === 0) return showToast("Add ingredients!", "error");
             push(ref(db, 'recipes'), { name, ingredients });
+            showToast("Recipe saved successfully!", "success");
             e.target.reset();
             document.getElementById("recipe-ingredients-container").innerHTML = '<p class="text-xs text-red-400 italic">Add ingredients below</p>';
         };
@@ -714,7 +749,8 @@
         window.deleteRecipe = (id) => {
             if (confirm("Are you sure you want to delete this potion recipe?")) {
                 remove(ref(db, `recipes/${id}`))
-                    .catch(err => alert("Error deleting recipe: " + err.message));
+                    .then(() => showToast("Recipe deleted.", "info"))
+                    .catch(err => showToast("Error deleting recipe: " + err.message, "error"));
             }
         };
 
@@ -752,15 +788,15 @@
                 if (ingId && qty) ingredients[ingId] = qty;
             });
 
-            if (!name) return alert("Potion name cannot be empty.");
-            if (Object.keys(ingredients).length === 0) return alert("Add at least one ingredient!");
+            if (!name) return showToast("Potion name cannot be empty.", "error");
+            if (Object.keys(ingredients).length === 0) return showToast("Add at least one ingredient!", "error");
 
             update(ref(db, `recipes/${id}`), { name, ingredients })
                 .then(() => {
-                    alert("Potion recipe updated successfully!");
+                    showToast("Potion recipe updated successfully!", "success");
                     closeEditRecipeModal();
                 })
-                .catch(err => alert("Error updating recipe: " + err.message));
+                .catch(err => showToast("Error updating recipe: " + err.message, "error"));
         };
 
         // Price logging
@@ -778,9 +814,9 @@
                 price,
                 updatedAt
             }).then(() => {
-                alert("Price recorded and updated!");
+                showToast("Price recorded and updated!", "success");
                 e.target.reset();
-            }).catch(err => alert("Error saving price: " + err.message));
+            }).catch(err => showToast("Error saving price: " + err.message, "error"));
         };
 
         // Ingredient Catalog Search & Display with Location Filtering

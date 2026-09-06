@@ -12,7 +12,7 @@
         <!-- Navbar -->
         <header class="bg-zinc-900 border-b border-red-950 p-4 flex flex-col md:flex-row justify-between items-center gap-3 shadow-lg">
             <div class="flex flex-col items-start">
-                <h1 class="text-xl font-bold tracking-wider text-red-500 flex items-center gap-2">
+                <h1 class="text-2xl font-bold tracking-wider text-red-500 flex items-center gap-2">
                     The Material Index
                 </h1>
                 <span class="text-[10px] text-red-400/80 italic mt-0.5">Crafted by Loic Sauvage</span>
@@ -141,15 +141,15 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-zinc-900 border-t border-red-950 py-6 px-6 text-center space-y-4 mt-12">
+    <footer class="bg-zinc-900 border-t border-red-950 py-3 px-4 text-center space-y-2 mt-8">
         <!-- Guild Identification Container -->
-        <div class="flex flex-col items-center justify-center space-y-1">
-            <span class="text-xs font-semibold uppercase tracking-widest text-red-400/90">Solitude Alchemist Guild</span>
-            <span class="text-[10px] text-red-500/60 italic">Restricted Ledger — For Guild Members Only</span>
+        <div class="flex flex-col items-center justify-center space-y-0.5">
+            <span class="text-[11px] font-semibold uppercase tracking-widest text-red-400/90">Solitude Alchemist Guild</span>
+            <span class="text-[9px] text-red-500/60 italic">Restricted Ledger — For Guild Members Only</span>
         </div>
 
-        <div class="text-xs text-red-400 pt-2 border-t border-red-950/60 max-w-xl mx-auto">
-            OOC: Whether you have questions, feedback, or just need to get in touch, please feel free to drop me a message on Discord at <code class="bg-zinc-950 border border-red-950 text-red-300 px-1.5 py-0.5 rounded font-mono text-[11px]">stax0r</code>. Always happy to help!
+        <div class="text-[11px] text-red-400 pt-1 border-t border-red-950/60 max-w-xl mx-auto">
+            OOC: Whether you have questions, feedback, or just need to get in touch, please feel free to drop me a message on Discord at <code class="bg-zinc-950 border border-red-950 text-red-300 px-1 py-0.2 rounded font-mono text-[10px]">stax0r</code>. Always happy to help!
         </div>
     </footer>
 
@@ -279,7 +279,7 @@
   measurementId: "G-J94V9BMR1Q"
         };
 
-        // REPLACE WITH YOUR ACTUAL WEBHOOK URL
+        // WEBHOOK URL
         const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1546052671788814367/16i9QCmlLHI-_n8wjW_V-Vdyu0CpqvO4EVH_uNNGa9GcQh0SbHGSC7k2Pr8NR7FWVWkA";
 
         const app = initializeApp(firebaseConfig);
@@ -548,14 +548,28 @@
                 });
 
                 if (response.ok || response.type === 'opaque') {
-                    showToast("Your missive has been successfully dispatched to the guild scribes!", "success");
+                    showToast("Your missive has been placed on the desk for review!", "success");
                     closeGuestModal();
                 } else {
-                    showToast("Failed to dispatch your note. Please try again later.", "error");
+                    const randomErrorMessages = [
+                        "The wind blew your letter away! Error code: 404_WIND",
+                        "Your letter got ruined by water! Error code: 500_SOAK",
+                        "A stray dragon singed your missive to ashes! Error code: 502_FIRE",
+                        "The courier tripped over a mudcrab! Error code: 503_CRAB"
+                    ];
+                    const randomError = randomErrorMessages[Math.floor(Math.random() * randomErrorMessages.length)];
+                    showToast(randomError, "error");
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Error dispatching missive: " + err.message, "error");
+                const randomErrorMessages = [
+                    "The wind blew your letter away! Error code: 404_WIND",
+                    "Your letter got ruined by water! Error code: 500_SOAK",
+                    "A stray dragon singed your missive to ashes! Error code: 502_FIRE",
+                    "The courier tripped over a mudcrab! Error code: 503_CRAB"
+                ];
+                const randomError = randomErrorMessages[Math.floor(Math.random() * randomErrorMessages.length)];
+                showToast(randomError, "error");
             }
         };
 

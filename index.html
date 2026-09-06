@@ -6,158 +6,123 @@
     <title>Alchemist's Ledger - Realtime Potion Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="bg-neutral-900 text-neutral-100 min-h-screen font-sans">
+<body class="bg-zinc-950 text-red-50 min-h-screen font-sans selection:bg-red-900 selection:text-white">
 
     <!-- Navbar -->
-    <header class="bg-neutral-850 border-b border-neutral-700/80 p-4 flex justify-between items-center shadow-md">
-        <h1 class="text-xl font-bold tracking-wider text-neutral-100">🧪 Alchemist's Ledger</h1>
+    <header class="bg-zinc-900 border-b border-red-950 p-4 flex justify-between items-center shadow-lg">
+        <h1 class="text-xl font-bold tracking-wider text-red-500 flex items-center gap-2">🧪 Alchemist's Ledger</h1>
         
-        <div id="auth-container" class="flex items-center gap-3">
-            <div id="logged-out-view" class="flex items-center gap-2">
-                <input type="email" id="auth-email" placeholder="Email" class="bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white">
-                <input type="password" id="auth-password" placeholder="Password" class="bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white">
-                <button onclick="handleLogin()" class="bg-neutral-700 hover:bg-neutral-600 px-3 py-1 rounded text-xs font-semibold transition">Sign In</button>
+        <div class="flex items-center gap-4">
+            <!-- Admin Control Toggles (Visible only when logged in) -->
+            <div id="admin-toggles" class="hidden flex items-center gap-2 border-r border-red-950 pr-4">
+                <button onclick="openAdminModal('locations')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">📍 Locations</button>
+                <button onclick="openAdminModal('ingredients')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">🌿 Ingredients</button>
+                <button onclick="openAdminModal('recipes')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">📜 Potions</button>
+                <button onclick="openAdminModal('prices')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">💰 Log Price</button>
             </div>
-            <div id="logged-in-view" class="hidden flex items-center gap-3">
-                <span id="user-display" class="text-xs text-neutral-300"></span>
-                <button onclick="handleSignOut()" class="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-3 py-1 rounded text-xs font-semibold transition">Sign Out</button>
+
+            <!-- Auth View -->
+            <div id="auth-container" class="flex items-center gap-3">
+                <div id="logged-out-view" class="flex items-center gap-2">
+                    <input type="email" id="auth-email" placeholder="Email" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                    <input type="password" id="auth-password" placeholder="Password" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                    <button onclick="handleLogin()" class="bg-red-900 hover:bg-red-800 text-white border border-red-700 px-3 py-1 rounded text-xs font-semibold transition">Sign In</button>
+                </div>
+                <div id="logged-in-view" class="hidden flex items-center gap-3">
+                    <span id="user-display" class="text-xs text-red-300"></span>
+                    <button onclick="handleSignOut()" class="bg-zinc-900 hover:bg-zinc-800 border border-red-950 px-3 py-1 rounded text-xs font-semibold text-red-300 transition">Sign Out</button>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
+    <!-- Main Container (Expanded for Public Focus) -->
     <main class="max-w-7xl mx-auto p-6 space-y-6">
 
         <!-- Primary Feature: Ingredient Price Catalog & Search -->
-        <section class="bg-neutral-850 border border-neutral-700 rounded-xl p-6 shadow-xl space-y-4">
+        <section class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 class="text-lg font-semibold text-neutral-100">Ingredient Price Catalog</h2>
-                    <p class="text-xs text-neutral-400">Search any ingredient to check live prices across all discovered locations.</p>
+                    <h2 class="text-lg font-semibold text-red-100">Ingredient Price Catalog</h2>
+                    <p class="text-xs text-red-400">Search any ingredient to check live prices across all discovered locations.</p>
                 </div>
-                <input type="text" id="catalog-search" oninput="renderCatalog()" placeholder="Search ingredient catalog..." class="w-full md:w-72 bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-neutral-100 focus:outline-none focus:border-neutral-500">
+                <input type="text" id="catalog-search" oninput="renderCatalog()" placeholder="Search ingredient catalog..." class="w-full md:w-72 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
             </div>
             
-            <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-1">
-                <p class="text-sm text-neutral-400 italic">No ingredients found.</p>
+            <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[32rem] overflow-y-auto pr-1">
+                <p class="text-sm text-red-400 italic">No ingredients found.</p>
             </div>
         </section>
 
-        <!-- Secondary Layout: Batch Simulator (Centered & Balanced) & Admin Panel -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Secondary Section: Batch Simulator & Pricing Breakdown -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            <!-- Left/Center Column: Batch Simulator & Pricing Breakdown -->
-            <section class="lg:col-span-2 space-y-6">
+            <!-- Simulator Controls -->
+            <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
+                <h2 class="text-lg font-semibold text-red-100">Potion Batch Crafting Simulator</h2>
                 
-                <!-- Simulator Controls -->
-                <div class="bg-neutral-850 border border-neutral-700 rounded-xl p-6 shadow-xl">
-                    <h2 class="text-lg font-semibold mb-4 text-neutral-200">Potion Batch Crafting Simulator</h2>
-                    
-                    <div class="flex gap-3 mb-4">
-                        <select id="simulator-recipe-select" class="flex-1 bg-neutral-800 border border-neutral-700 rounded p-2 text-sm text-neutral-200">
-                            <option value="">Select a Potion Recipe...</option>
-                        </select>
-                        <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-neutral-800 border border-neutral-700 rounded p-2 text-sm text-center text-neutral-200">
-                        <button onclick="addRecipeToBatch()" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-4 py-2 rounded text-sm font-semibold transition">Add to Batch</button>
-                    </div>
-
-                    <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2">Current Batch Queue (Auto-Grouped)</h3>
-                        <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                            <p class="text-sm text-neutral-400 italic">No potions added to batch yet.</p>
-                        </div>
-                    </div>
+                <div class="flex gap-3">
+                    <select id="simulator-recipe-select" class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-red-200 focus:outline-none focus:border-red-600">
+                        <option value="">Select a Potion Recipe...</option>
+                    </select>
+                    <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-center text-red-200 focus:outline-none focus:border-red-600">
+                    <button onclick="addRecipeToBatch()" class="bg-red-900 hover:bg-red-800 border border-red-700 px-4 py-2 rounded text-sm font-semibold transition text-white">Add</button>
                 </div>
 
-                <!-- Detailed Price Breakdown Matrix -->
-                <div class="bg-neutral-850 border border-neutral-700 rounded-xl p-6 shadow-xl">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-md font-semibold text-neutral-200">Batch Ingredient Sourcing Breakdown</h3>
-                        <span id="total-batch-cost" class="text-neutral-100 font-bold text-lg">Total Optimal: 0 Gold</span>
-                    </div>
-                    <div id="detailed-breakdown-container" class="space-y-4 max-h-80 overflow-y-auto pr-1">
-                        <p class="text-sm text-neutral-400 italic">Add items to batch to view pricing breakdowns.</p>
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-red-400 mb-2">Current Batch Queue</h3>
+                    <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto">
+                        <p class="text-sm text-red-400 italic">No potions added to batch yet.</p>
                     </div>
                 </div>
+            </div>
 
-            </section>
-
-            <!-- Right Column: Admin Panel (Visible when logged in) -->
-            <aside id="admin-panel" class="hidden space-y-6">
-                <div class="bg-neutral-850 border border-neutral-600 rounded-xl p-6 shadow-xl space-y-6">
-                    <h2 class="text-md font-bold text-neutral-200">🛠️ Admin Panel</h2>
-                    
-                    <!-- Locations Management -->
-                    <div class="space-y-3 pb-4 border-b border-neutral-700">
-                        <h3 class="text-xs font-bold uppercase text-neutral-400">Locations (Hold / Town)</h3>
-                        <form id="location-form" onsubmit="handleLocationSubmit(event)" class="space-y-2">
-                            <input type="text" id="loc-hold" placeholder="Hold / Region" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                            <input type="text" id="loc-town" placeholder="City / Town" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                            <button type="submit" class="w-full bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 py-1.5 rounded text-xs font-semibold">Add Location</button>
-                        </form>
-                        <div id="admin-locations-list" class="space-y-2 max-h-36 overflow-y-auto pr-1 mt-2"></div>
-                    </div>
-
-                    <!-- Ingredients Management -->
-                    <div class="space-y-3 pb-4 border-b border-neutral-700">
-                        <h3 class="text-xs font-bold uppercase text-neutral-400">Ingredients Catalog</h3>
-                        <form id="ingredient-form" onsubmit="handleIngredientSubmit(event)" class="flex gap-2">
-                            <input type="text" id="ing-name" placeholder="New Ingredient Name" required class="flex-1 bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                            <button type="submit" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-3 py-1.5 rounded text-xs font-semibold">Add</button>
-                        </form>
-                        <div id="admin-ingredients-list" class="space-y-2 max-h-36 overflow-y-auto pr-1"></div>
-                    </div>
-
-                    <!-- Recipes / Potions Management -->
-                    <div class="space-y-3 pb-4 border-b border-neutral-700">
-                        <h3 class="text-xs font-bold uppercase text-neutral-400">Potion Recipes</h3>
-                        <form id="recipe-form" onsubmit="handleRecipeSubmit(event)" class="space-y-2">
-                            <input type="text" id="recipe-name" placeholder="Potion Name" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                            <div id="recipe-ingredients-container" class="space-y-1 bg-neutral-800 p-2 rounded border border-neutral-700 max-h-28 overflow-y-auto">
-                                <p class="text-xs text-neutral-400 italic">Add ingredients below</p>
-                            </div>
-                            <button type="button" onclick="addIngredientRowToRecipeForm('recipe-ingredients-container')" class="text-xs text-neutral-300 hover:underline">+ Add Ingredient Requirement</button>
-                            <button type="submit" class="w-full mt-2 bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 py-1.5 rounded text-xs font-semibold">Save Recipe</button>
-                        </form>
-                        <div id="admin-recipes-list" class="space-y-2 max-h-36 overflow-y-auto pr-1 mt-2"></div>
-                    </div>
-
-                    <!-- Log Price -->
-                    <form id="price-form" onsubmit="handlePriceSubmit(event)" class="space-y-2">
-                        <h3 class="text-xs font-bold uppercase text-neutral-400">Log / Update Price</h3>
-                        <select id="price-ingredient-select" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                            <option value="">Select Ingredient...</option>
-                        </select>
-                        <select id="price-location-select" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                            <option value="">Select Location...</option>
-                        </select>
-                        <input type="number" step="0.01" id="price-amount" placeholder="Price" required class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-neutral-200">
-                        <button type="submit" class="w-full bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 py-1.5 rounded text-xs font-semibold">Record Price</button>
-                    </form>
+            <!-- Detailed Price Breakdown Matrix -->
+            <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-md font-semibold text-red-100">Batch Ingredient Sourcing Breakdown</h3>
+                    <span id="total-batch-cost" class="text-red-400 font-bold text-lg">Total Optimal: 0 Gold</span>
                 </div>
-            </aside>
+                <div id="detailed-breakdown-container" class="space-y-3 max-h-48 overflow-y-auto pr-1">
+                    <p class="text-sm text-red-400 italic">Add items to batch to view pricing breakdowns.</p>
+                </div>
+            </div>
 
         </div>
 
     </main>
 
-    <!-- Edit Recipe Modal -->
-    <div id="edit-recipe-modal" class="hidden fixed inset-0 bg-black/70 flex justify-center items-center p-4 z-50">
-        <div class="bg-neutral-850 border border-neutral-700 rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-            <h2 class="text-lg font-bold text-neutral-100">Edit Potion Recipe</h2>
+    <!-- Generic Admin Modal -->
+    <div id="admin-modal" class="hidden fixed inset-0 bg-black/80 flex justify-center items-center p-4 z-50">
+        <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 max-w-xl w-full space-y-4 shadow-2xl relative">
+            <div class="flex justify-between items-center border-b border-red-950 pb-3">
+                <h2 id="admin-modal-title" class="text-lg font-bold text-red-100">Admin Management</h2>
+                <button onclick="closeAdminModal()" class="text-red-400 hover:text-white font-bold text-sm">✕</button>
+            </div>
+            
+            <div id="admin-modal-content" class="max-h-96 overflow-y-auto pr-1 space-y-4">
+                <!-- Dynamically injected admin forms & lists -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Potion Modal -->
+    <div id="edit-recipe-modal" class="hidden fixed inset-0 bg-black/80 flex justify-center items-center p-4 z-50">
+        <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <h2 class="text-lg font-bold text-red-100">Edit Potion Recipe</h2>
             <input type="hidden" id="edit-recipe-id">
             <div class="space-y-1">
-                <label class="text-xs text-neutral-400 uppercase font-bold">Potion Name</label>
-                <input type="text" id="edit-recipe-name" class="w-full bg-neutral-800 border border-neutral-700 rounded p-2 text-xs text-white">
+                <label class="text-xs text-red-400 uppercase font-bold">Potion Name</label>
+                <input type="text" id="edit-recipe-name" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
             </div>
             <div class="space-y-1">
-                <label class="text-xs text-neutral-400 uppercase font-bold">Ingredients</label>
-                <div id="edit-recipe-ingredients-container" class="space-y-1 bg-neutral-800 p-2 rounded border border-neutral-700 max-h-36 overflow-y-auto"></div>
-                <button type="button" onclick="addIngredientRowToRecipeForm('edit-recipe-ingredients-container')" class="text-xs text-neutral-300 hover:underline mt-1">+ Add Ingredient Requirement</button>
+                <label class="text-xs text-red-400 uppercase font-bold">Ingredients</label>
+                <div id="edit-recipe-ingredients-container" class="space-y-1 bg-zinc-950 p-2 rounded border border-red-950 max-h-36 overflow-y-auto"></div>
+                <button type="button" onclick="addIngredientRowToRecipeForm('edit-recipe-ingredients-container')" class="text-xs text-red-400 hover:underline mt-1">+ Add Ingredient Requirement</button>
             </div>
             <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeEditRecipeModal()" class="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-3 py-1.5 rounded text-xs font-semibold">Cancel</button>
-                <button onclick="saveEditedRecipe()" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-3 py-1.5 rounded text-xs font-semibold">Save Changes</button>
+                <button onclick="closeEditRecipeModal()" class="bg-zinc-800 hover:bg-zinc-700 border border-red-950 px-3 py-1.5 rounded text-xs font-semibold text-red-200">Cancel</button>
+                <button onclick="saveEditedRecipe()" class="bg-red-900 hover:bg-red-800 border border-red-700 px-3 py-1.5 rounded text-xs font-semibold text-white">Save Changes</button>
             </div>
         </div>
     </div>
@@ -188,6 +153,7 @@
         let cachedLocations = {};
         let cachedPrices = {};
         let currentBatch = [];
+        let activeAdminTab = 'locations';
 
         window.handleLogin = async () => {
             const email = document.getElementById("auth-email").value;
@@ -204,16 +170,17 @@
         onAuthStateChanged(auth, (user) => {
             const outView = document.getElementById("logged-out-view");
             const inView = document.getElementById("logged-in-view");
-            const adminPanel = document.getElementById("admin-panel");
+            const adminToggles = document.getElementById("admin-toggles");
             if (user) {
                 outView.classList.add("hidden");
                 inView.classList.remove("hidden");
                 document.getElementById("user-display").textContent = user.email;
-                adminPanel.classList.remove("hidden");
+                adminToggles.classList.remove("hidden");
             } else {
                 outView.classList.remove("hidden");
                 inView.classList.add("hidden");
-                adminPanel.classList.add("hidden");
+                adminToggles.classList.add("hidden");
+                closeAdminModal();
             }
         });
 
@@ -221,12 +188,8 @@
         onValue(ref(db, 'locations'), (snapshot) => {
             cachedLocations = snapshot.val() || {};
             const locSelect = document.getElementById("price-location-select");
-            locSelect.innerHTML = '<option value="">Select Location...</option>';
+            if (locSelect) locSelect.innerHTML = '<option value="">Select Location...</option>';
             
-            const adminLocList = document.getElementById("admin-locations-list");
-            adminLocList.innerHTML = "";
-
-            // Sort locations alphabetically by Hold, then Town
             const sortedLocations = Object.entries(cachedLocations).sort((a, b) => {
                 const textA = `${a[1].hold} / ${a[1].town}`.toLowerCase();
                 const textB = `${b[1].hold} / ${b[1].town}`.toLowerCase();
@@ -234,16 +197,10 @@
             });
 
             for (const [id, loc] of sortedLocations) {
-                locSelect.innerHTML += `<option value="${id}">${loc.hold} / ${loc.town}</option>`;
-                
-                adminLocList.innerHTML += `
-                    <div class="flex gap-2 items-center bg-neutral-800 p-1.5 rounded border border-neutral-700">
-                        <input type="text" id="edit-loc-hold-${id}" value="${loc.hold}" class="w-1/2 bg-neutral-900 border border-neutral-700 rounded px-1.5 py-1 text-xs text-white">
-                        <input type="text" id="edit-loc-town-${id}" value="${loc.town}" class="w-1/2 bg-neutral-900 border border-neutral-700 rounded px-1.5 py-1 text-xs text-white">
-                        <button onclick="updateLocation('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-2 py-1 rounded text-xs font-semibold">Save</button>
-                        <button onclick="deleteLocation('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 text-neutral-300 px-2 py-1 rounded text-xs">✕</button>
-                    </div>
-                `;
+                if (locSelect) locSelect.innerHTML += `<option value="${id}">${loc.hold} / ${loc.town}</option>`;
+            }
+            if (document.getElementById("admin-modal").classList.contains("flex") && activeAdminTab === 'locations') {
+                renderAdminModalContent('locations');
             }
             renderCatalog();
             runOptimization();
@@ -252,26 +209,17 @@
         onValue(ref(db, 'ingredients'), (snapshot) => {
             cachedIngredients = snapshot.val() || {};
             const ingSelect = document.getElementById("price-ingredient-select");
-            ingSelect.innerHTML = '<option value="">Select Ingredient...</option>';
+            if (ingSelect) ingSelect.innerHTML = '<option value="">Select Ingredient...</option>';
             
-            const adminIngList = document.getElementById("admin-ingredients-list");
-            adminIngList.innerHTML = "";
-
-            // Sort ingredients alphabetically by name
             const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => 
                 a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
             );
 
             for (const [id, ing] of sortedIngredients) {
-                ingSelect.innerHTML += `<option value="${id}">${ing.name}</option>`;
-                
-                adminIngList.innerHTML += `
-                    <div class="flex gap-2 items-center bg-neutral-800 p-1.5 rounded border border-neutral-700">
-                        <input type="text" id="edit-ing-${id}" value="${ing.name}" class="flex-1 bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs text-white">
-                        <button onclick="updateIngredientName('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-2 py-1 rounded text-xs font-semibold">Save</button>
-                        <button onclick="deleteIngredient('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 text-neutral-300 px-2 py-1 rounded text-xs">✕</button>
-                    </div>
-                `;
+                if (ingSelect) ingSelect.innerHTML += `<option value="${id}">${ing.name}</option>`;
+            }
+            if (document.getElementById("admin-modal").classList.contains("flex") && activeAdminTab === 'ingredients') {
+                renderAdminModalContent('ingredients');
             }
             renderCatalog();
             runOptimization();
@@ -280,28 +228,17 @@
         onValue(ref(db, 'recipes'), (snapshot) => {
             cachedRecipes = snapshot.val() || {};
             const recipeSelect = document.getElementById("simulator-recipe-select");
-            recipeSelect.innerHTML = '<option value="">Select a Potion Recipe...</option>';
+            if (recipeSelect) recipeSelect.innerHTML = '<option value="">Select a Potion Recipe...</option>';
             
-            const adminRecipeList = document.getElementById("admin-recipes-list");
-            adminRecipeList.innerHTML = "";
-
-            // Sort recipes alphabetically by name
             const sortedRecipes = Object.entries(cachedRecipes).sort((a, b) => 
                 a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
             );
 
             for (const [id, rec] of sortedRecipes) {
-                recipeSelect.innerHTML += `<option value="${id}">${rec.name}</option>`;
-                
-                adminRecipeList.innerHTML += `
-                    <div class="flex justify-between items-center bg-neutral-800 p-2 rounded border border-neutral-700 text-xs">
-                        <span class="font-medium text-neutral-200">${rec.name}</span>
-                        <div class="flex gap-1">
-                            <button onclick="openEditRecipeModal('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 px-2 py-1 rounded text-xs font-semibold">Edit</button>
-                            <button onclick="deleteRecipe('${id}')" class="bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 text-neutral-300 px-2 py-1 rounded text-xs">✕</button>
-                        </div>
-                    </div>
-                `;
+                if (recipeSelect) recipeSelect.innerHTML += `<option value="${id}">${rec.name}</option>`;
+            }
+            if (document.getElementById("admin-modal").classList.contains("flex") && activeAdminTab === 'recipes') {
+                renderAdminModalContent('recipes');
             }
             renderBatchQueue();
             runOptimization();
@@ -312,6 +249,122 @@
             renderCatalog();
             runOptimization();
         });
+
+        // Admin Modal Controls
+        window.openAdminModal = (tab) => {
+            activeAdminTab = tab;
+            const titles = {
+                locations: "📍 Manage Locations",
+                ingredients: "🌿 Manage Ingredients Catalog",
+                recipes: "📜 Manage Potion Recipes",
+                prices: "💰 Log / Update Price"
+            };
+            document.getElementById("admin-modal-title").textContent = titles[tab];
+            renderAdminModalContent(tab);
+            document.getElementById("admin-modal").classList.remove("hidden");
+            document.getElementById("admin-modal").classList.add("flex");
+        };
+
+        window.closeAdminModal = () => {
+            document.getElementById("admin-modal").classList.remove("flex");
+            document.getElementById("admin-modal").classList.add("hidden");
+        };
+
+        function renderAdminModalContent(tab) {
+            const container = document.getElementById("admin-modal-content");
+            if (tab === 'locations') {
+                const sortedLocations = Object.entries(cachedLocations).sort((a, b) => {
+                    const textA = `${a[1].hold} / ${a[1].town}`.toLowerCase();
+                    const textB = `${b[1].hold} / ${b[1].town}`.toLowerCase();
+                    return textA.localeCompare(textB);
+                });
+
+                let listHtml = sortedLocations.map(([id, loc]) => `
+                    <div class="flex gap-2 items-center bg-zinc-950 p-2 rounded border border-red-950">
+                        <input type="text" id="edit-loc-hold-${id}" value="${loc.hold}" class="w-1/2 bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-white">
+                        <input type="text" id="edit-loc-town-${id}" value="${loc.town}" class="w-1/2 bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-white">
+                        <button onclick="updateLocation('${id}')" class="bg-red-900 hover:bg-red-800 border border-red-700 px-2 py-1 rounded text-xs font-semibold text-white">Save</button>
+                        <button onclick="deleteLocation('${id}')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-950 text-red-300 px-2 py-1 rounded text-xs">✕</button>
+                    </div>
+                `).join("");
+
+                container.innerHTML = `
+                    <form id="location-form" onsubmit="handleLocationSubmit(event)" class="space-y-2 pb-4 border-b border-red-950">
+                        <input type="text" id="loc-hold" placeholder="Hold / Region" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <input type="text" id="loc-town" placeholder="City / Town" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <button type="submit" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 py-1.5 rounded text-xs font-semibold text-white">Add Location</button>
+                    </form>
+                    <div class="space-y-2 max-h-60 overflow-y-auto pr-1">${listHtml || '<p class="text-xs text-red-400 italic">No locations found.</p>'}</div>
+                `;
+            } else if (tab === 'ingredients') {
+                const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => 
+                    a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
+                );
+
+                let listHtml = sortedIngredients.map(([id, ing]) => `
+                    <div class="flex gap-2 items-center bg-zinc-950 p-2 rounded border border-red-950">
+                        <input type="text" id="edit-ing-${id}" value="${ing.name}" class="flex-1 bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-white">
+                        <button onclick="updateIngredientName('${id}')" class="bg-red-900 hover:bg-red-800 border border-red-700 px-2 py-1 rounded text-xs font-semibold text-white">Save</button>
+                        <button onclick="deleteIngredient('${id}')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-950 text-red-300 px-2 py-1 rounded text-xs">✕</button>
+                    </div>
+                `).join("");
+
+                container.innerHTML = `
+                    <form id="ingredient-form" onsubmit="handleIngredientSubmit(event)" class="flex gap-2 pb-4 border-b border-red-950">
+                        <input type="text" id="ing-name" placeholder="New Ingredient Name" required class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 px-3 py-1.5 rounded text-xs font-semibold text-white">Add</button>
+                    </form>
+                    <div class="space-y-2 max-h-60 overflow-y-auto pr-1">${listHtml || '<p class="text-xs text-red-400 italic">No ingredients found.</p>'}</div>
+                `;
+            } else if (tab === 'recipes') {
+                const sortedRecipes = Object.entries(cachedRecipes).sort((a, b) => 
+                    a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
+                );
+
+                let listHtml = sortedRecipes.map(([id, rec]) => `
+                    <div class="flex justify-between items-center bg-zinc-950 p-2 rounded border border-red-950 text-xs">
+                        <span class="font-medium text-red-100">${rec.name}</span>
+                        <div class="flex gap-1">
+                            <button onclick="openEditRecipeModal('${id}')" class="bg-red-900 hover:bg-red-800 border border-red-700 px-2 py-1 rounded text-xs font-semibold text-white">Edit</button>
+                            <button onclick="deleteRecipe('${id}')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-950 text-red-300 px-2 py-1 rounded text-xs">✕</button>
+                        </div>
+                    </div>
+                `).join("");
+
+                container.innerHTML = `
+                    <form id="recipe-form" onsubmit="handleRecipeSubmit(event)" class="space-y-2 pb-4 border-b border-red-950">
+                        <input type="text" id="recipe-name" placeholder="Potion Name" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <div id="recipe-ingredients-container" class="space-y-1 bg-zinc-950 p-2 rounded border border-red-950 max-h-28 overflow-y-auto">
+                            <p class="text-xs text-red-400 italic">Add ingredients below</p>
+                        </div>
+                        <button type="button" onclick="addIngredientRowToRecipeForm('recipe-ingredients-container')" class="text-xs text-red-400 hover:underline">+ Add Ingredient Requirement</button>
+                        <button type="submit" class="w-full mt-2 bg-red-900 hover:bg-red-800 border border-red-700 py-1.5 rounded text-xs font-semibold text-white">Save Recipe</button>
+                    </form>
+                    <div class="space-y-2 max-h-48 overflow-y-auto pr-1">${listHtml || '<p class="text-xs text-red-400 italic">No recipes found.</p>'}</div>
+                `;
+            } else if (tab === 'prices') {
+                let ingredientOptions = '<option value="">Select Ingredient...</option>';
+                const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
+                for (const [id, ing] of sortedIngredients) {
+                    ingredientOptions += `<option value="${id}">${ing.name}</option>`;
+                }
+
+                let locationOptions = '<option value="">Select Location...</option>';
+                const sortedLocations = Object.entries(cachedLocations).sort((a, b) => `${a[1].hold}/${a[1].town}`.toLowerCase().localeCompare(`${b[1].hold}/${b[1].town}`.toLowerCase()));
+                for (const [id, loc] of sortedLocations) {
+                    locationOptions += `<option value="${id}">${loc.hold} / ${loc.town}</option>`;
+                }
+
+                container.innerHTML = `
+                    <form id="price-form" onsubmit="handlePriceSubmit(event)" class="space-y-3">
+                        <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">${ingredientOptions}</select>
+                        <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">${locationOptions}</select>
+                        <input type="number" step="0.01" id="price-amount" placeholder="Price" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <button type="submit" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white">Record Price</button>
+                    </form>
+                `;
+            }
+        }
 
         // Admin: Locations
         window.handleLocationSubmit = (e) => {
@@ -334,12 +387,20 @@
 
         window.deleteLocation = (id) => {
             if (confirm("Are you sure you want to delete this location?")) {
-                remove(ref(db, `locations/${id}`))
+                // Clean up associated prices
+                const updates = {};
+                updates[`locations/${id}`] = null;
+                for (const [pKey, pVal] of Object.entries(cachedPrices)) {
+                    if (pVal.locationId === id) {
+                        updates[`prices/${pKey}`] = null;
+                    }
+                }
+                update(ref(db), updates)
                     .catch(err => alert("Error deleting location: " + err.message));
             }
         };
 
-        // Admin: Ingredients
+        // Admin: Ingredients (With automatic cleanup of old prices)
         window.handleIngredientSubmit = (e) => {
             e.preventDefault();
             push(ref(db, 'ingredients'), {
@@ -357,22 +418,28 @@
         };
 
         window.deleteIngredient = (id) => {
-            if (confirm("Are you sure you want to delete this ingredient? All dependent records may be affected.")) {
-                remove(ref(db, `ingredients/${id}`))
+            if (confirm("Are you sure you want to delete this ingredient? All older prices and dependent records will be cleaned up.")) {
+                const updates = {};
+                updates[`ingredients/${id}`] = null;
+                // Delete associated prices
+                for (const [pKey, pVal] of Object.entries(cachedPrices)) {
+                    if (pVal.ingredientId === id) {
+                        updates[`prices/${pKey}`] = null;
+                    }
+                }
+                update(ref(db), updates)
                     .catch(err => alert("Error deleting ingredient: " + err.message));
             }
         };
 
-        // Admin: Recipes & Dynamic rows
+        // Admin: Recipes
         window.addIngredientRowToRecipeForm = (containerId, selectedIngId = "", qtyVal = "") => {
             const container = document.getElementById(containerId);
-            // Clear default placeholder text if present
             if (container.querySelector("p")) {
                 container.innerHTML = "";
             }
             const rowId = "row-" + Math.random().toString(36).substring(2, 9);
             
-            // Sort ingredients alphabetically inside the dropdown selector
             const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => 
                 a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
             );
@@ -386,9 +453,9 @@
             div.id = rowId;
             div.className = "flex gap-2 items-center mt-1";
             div.innerHTML = `
-                <select class="recipe-ing-select flex-1 bg-neutral-900 border border-neutral-700 rounded p-1 text-xs text-white" required>${options}</select>
-                <input type="number" step="0.1" value="${qtyVal}" placeholder="Qty" class="recipe-ing-qty w-16 bg-neutral-900 border border-neutral-700 rounded p-1 text-xs text-white" required>
-                <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-neutral-400 font-bold text-xs">X</button>
+                <select class="recipe-ing-select flex-1 bg-zinc-900 border border-red-950 rounded p-1 text-xs text-white" required>${options}</select>
+                <input type="number" step="0.1" value="${qtyVal}" placeholder="Qty" class="recipe-ing-qty w-16 bg-zinc-900 border border-red-950 rounded p-1 text-xs text-white" required>
+                <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-400 font-bold text-xs">X</button>
             `;
             container.appendChild(div);
         };
@@ -406,7 +473,7 @@
             if (Object.keys(ingredients).length === 0) return alert("Add ingredients!");
             push(ref(db, 'recipes'), { name, ingredients });
             e.target.reset();
-            document.getElementById("recipe-ingredients-container").innerHTML = '<p class="text-xs text-neutral-400 italic">Add ingredients below</p>';
+            document.getElementById("recipe-ingredients-container").innerHTML = '<p class="text-xs text-red-400 italic">Add ingredients below</p>';
         };
 
         window.deleteRecipe = (id) => {
@@ -481,7 +548,7 @@
             }).catch(err => alert("Error saving price: " + err.message));
         };
 
-        // Ingredient Catalog Search & Display
+        // Ingredient Catalog Search & Display (Fixed height container with internal scroll)
         window.renderCatalog = () => {
             const query = (document.getElementById("catalog-search").value || "").toLowerCase();
             const container = document.getElementById("catalog-container");
@@ -491,7 +558,7 @@
             ).sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
 
             if (filteredIngredients.length === 0) {
-                container.innerHTML = '<p class="text-sm text-neutral-400 italic">No matching ingredients found.</p>';
+                container.innerHTML = '<p class="text-sm text-red-400 italic">No matching ingredients found.</p>';
                 return;
             }
 
@@ -500,17 +567,16 @@
                 for (const [key, p] of Object.entries(cachedPrices)) {
                     if (p.ingredientId === ingId) offers.push(p);
                 }
-                // Sort offers by price ascending
                 offers.sort((a, b) => a.price - b.price);
 
                 let offersHtml = "";
                 if (offers.length === 0) {
-                    offersHtml = '<p class="text-xs text-neutral-500 italic">No locations have priced this ingredient yet.</p>';
+                    offersHtml = '<p class="text-xs text-zinc-500 italic">No locations have priced this ingredient yet.</p>';
                 } else {
                     offersHtml = offers.map((offer, idx) => {
                         const loc = cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
                         const isCheapest = idx === 0;
-                        const rowStyle = isCheapest ? "bg-neutral-800 text-neutral-100 border border-neutral-600 font-medium" : "bg-neutral-900/50 text-neutral-400";
+                        const rowStyle = isCheapest ? "bg-zinc-950 text-red-100 border border-red-900 font-medium" : "bg-zinc-900/50 text-red-400";
                         
                         let formattedDate = "Unknown";
                         if (offer.updatedAt) {
@@ -522,16 +588,16 @@
                         return `
                             <div class="flex justify-between items-center p-1.5 rounded text-xs ${rowStyle}">
                                 <span>${loc.hold} / ${loc.town} ${isCheapest ? '⭐ <strong>(Cheapest)</strong>' : ''}</span>
-                                <span class="font-mono">${offer.price} Gold <span class="text-[10px] text-neutral-400">(${formattedDate})</span></span>
+                                <span class="font-mono">${offer.price} Gold <span class="text-[10px] text-zinc-500">(${formattedDate})</span></span>
                             </div>
                         `;
                     }).join("");
                 }
 
                 return `
-                    <div class="bg-neutral-800/60 border border-neutral-700 rounded-lg p-4 space-y-2">
-                        <h3 class="font-bold text-neutral-100 text-sm border-b border-neutral-700 pb-1">${ing.name}</h3>
-                        <div class="space-y-1 max-h-36 overflow-y-auto pr-1">
+                    <div class="bg-zinc-950/60 border border-red-950 rounded-lg p-4 space-y-2 flex flex-col h-48">
+                        <h3 class="font-bold text-red-100 text-sm border-b border-red-950 pb-1 flex-shrink-0">${ing.name}</h3>
+                        <div class="space-y-1 overflow-y-auto pr-1 flex-1">
                             ${offersHtml}
                         </div>
                     </div>
@@ -564,15 +630,15 @@
         function renderBatchQueue() {
             const container = document.getElementById("batch-queue-list");
             if (currentBatch.length === 0) {
-                container.innerHTML = '<p class="text-sm text-neutral-400 italic">No potions added to batch yet.</p>';
+                container.innerHTML = '<p class="text-sm text-red-400 italic">No potions added to batch yet.</p>';
                 return;
             }
             container.innerHTML = currentBatch.map((item, idx) => {
                 const rec = cachedRecipes[item.recipeId] || { name: "Unknown" };
                 return `
-                    <div class="flex items-center gap-2 bg-neutral-800 border border-neutral-700 px-3 py-1.5 rounded-full text-xs text-neutral-200">
+                    <div class="flex items-center gap-2 bg-zinc-950 border border-red-950 px-3 py-1.5 rounded-full text-xs text-red-200">
                         <span>${rec.name} <strong>x${item.count}</strong></span>
-                        <button onclick="removeBatchItem(${idx})" class="text-neutral-400 hover:text-white font-bold ml-1">×</button>
+                        <button onclick="removeBatchItem(${idx})" class="text-red-400 hover:text-white font-bold ml-1">×</button>
                     </div>
                 `;
             }).join("");
@@ -593,7 +659,7 @@
             const totalCostDisplay = document.getElementById("total-batch-cost");
 
             if (Object.keys(totalDemands).length === 0) {
-                container.innerHTML = '<p class="text-sm text-neutral-400 italic">Add items to batch to view pricing breakdowns.</p>';
+                container.innerHTML = '<p class="text-sm text-red-400 italic">Add items to batch to view pricing breakdowns.</p>';
                 totalCostDisplay.textContent = "Total Optimal: 0 Gold";
                 return;
             }
@@ -601,7 +667,6 @@
             let overallOptimalTotal = 0;
             let html = "";
 
-            // Sort demanded items alphabetically by ingredient name
             const sortedDemands = Object.entries(totalDemands).sort((a, b) => {
                 const nameA = (cachedIngredients[a[0]]?.name || "").toLowerCase();
                 const nameB = (cachedIngredients[b[0]]?.name || "").toLowerCase();
@@ -624,22 +689,21 @@
                 }
 
                 html += `
-                    <div class="bg-neutral-800/40 border border-neutral-700 rounded-lg p-4">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold text-neutral-200">${ingMeta.name}</span>
-                            <span class="text-sm bg-neutral-800 border border-neutral-700 px-2 py-0.5 rounded text-neutral-300">Needed: ${neededQty}</span>
+                    <div class="bg-zinc-950/40 border border-red-950 rounded-lg p-3">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-red-100 text-xs">${ingMeta.name}</span>
+                            <span class="text-xs bg-zinc-900 border border-red-950 px-2 py-0.5 rounded text-red-300">Needed: ${neededQty}</span>
                         </div>
-                        <div class="text-xs text-neutral-300 space-y-1">
-                            <p class="font-semibold text-neutral-400 mb-1">Available Locations & Latest Prices:</p>
+                        <div class="text-xs text-red-300 space-y-1">
                 `;
 
                 if (storeOffers.length === 0) {
-                    html += `<p class="italic text-neutral-500">No prices logged across locations yet.</p>`;
+                    html += `<p class="italic text-zinc-500">No prices logged across locations yet.</p>`;
                 } else {
                     storeOffers.forEach((offer, idx) => {
                         const loc = cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
                         const isCheapest = idx === 0;
-                        const rowStyle = isCheapest ? "bg-neutral-800 border border-neutral-600 text-neutral-100 font-medium" : "bg-neutral-900/40 text-neutral-400";
+                        const rowStyle = isCheapest ? "bg-zinc-900 border border-red-900 text-red-100 font-medium" : "bg-zinc-950/40 text-red-400";
                         
                         let formattedDate = "Unknown";
                         if (offer.updatedAt) {
@@ -649,12 +713,9 @@
                         }
 
                         html += `
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 rounded gap-1 ${rowStyle}">
-                                <div>
-                                    <span>${loc.hold} / ${loc.town} ${isCheapest ? '⭐ <strong>(Cheapest)</strong>' : ''}</span>
-                                    <div class="text-[10px] text-neutral-400">Updated: ${formattedDate}</div>
-                                </div>
-                                <span class="font-mono">${offer.price} Gold (Subtotal: ${(offer.price * neededQty).toFixed(2)})</span>
+                            <div class="flex justify-between items-center p-1.5 rounded gap-1 ${rowStyle}">
+                                <span>${loc.hold} / ${loc.town} ${isCheapest ? '⭐ <strong>(Cheapest)</strong>' : ''}</span>
+                                <span class="font-mono">${offer.price} Gold (Sub: ${(offer.price * neededQty).toFixed(2)})</span>
                             </div>
                         `;
                     });

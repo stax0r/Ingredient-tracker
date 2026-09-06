@@ -3,129 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alchemist's Ledger - Realtime Potion Tracker</title>
+    <title>Solitude Alchemist Guild - Realtime Potion Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="bg-zinc-950 text-red-50 min-h-screen font-sans selection:bg-red-900 selection:text-white">
+<body class="bg-zinc-950 text-red-50 min-h-screen font-sans selection:bg-red-900 selection:text-white flex flex-col justify-between">
 
-    <!-- Navbar -->
-    <header class="bg-zinc-900 border-b border-red-950 p-4 flex justify-between items-center shadow-lg">
-        <h1 class="text-xl font-bold tracking-wider text-red-500 flex items-center gap-2">🧪 Alchemist's Ledger</h1>
-        
-        <div class="flex items-center gap-4">
-            <!-- Admin Control Toggles (Visible only when logged in) -->
-            <div id="admin-toggles" class="hidden flex items-center gap-2 border-r border-red-950 pr-4">
-                <button onclick="openAdminModal('locations')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">📍 Locations</button>
-                <button onclick="openAdminModal('ingredients')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">🌿 Ingredients</button>
-                <button onclick="openAdminModal('recipes')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">📜 Potions</button>
-            </div>
-
-            <!-- Guest Contribution Button (Visible only when logged out) -->
-            <button id="guest-contrib-btn" onclick="openGuestModal()" class="hidden bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition flex items-center gap-1.5">
-                ✉️ Dispatch Scribe Request
-            </button>
-
-            <!-- Auth View -->
-            <div id="auth-container" class="flex items-center gap-3">
-                <div id="logged-out-view" class="flex items-center gap-2">
-                    <input type="email" id="auth-email" placeholder="Email" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                    <input type="password" id="auth-password" placeholder="Password" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                    <button onclick="handleLogin()" class="bg-red-900 hover:bg-red-800 text-white border border-red-700 px-3 py-1 rounded text-xs font-semibold transition">Sign In</button>
-                </div>
-                <div id="logged-in-view" class="hidden flex items-center gap-3">
-                    <span id="user-display" class="text-xs text-red-300"></span>
-                    <button onclick="handleSignOut()" class="bg-zinc-900 hover:bg-zinc-800 border border-red-950 px-3 py-1 rounded text-xs font-semibold text-red-300 transition">Sign Out</button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto p-6 space-y-6">
-
-        <!-- Top Section: Quick Price Logger (Visible ONLY to Admins/Logged-in users) -->
-        <section id="price-logger-section" class="hidden bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-red-950 pb-3">
-                <div>
-                    <h2 class="text-lg font-semibold text-red-100">Record Ingredient Price</h2>
-                    <p class="text-xs text-red-400">Log or update live market pricing across discovered realms.</p>
-                </div>
-            </div>
-
-            <!-- Direct Price Logger Form -->
-            <form id="direct-price-form" onsubmit="handlePriceSubmit(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-bold text-red-400">Ingredient</label>
-                    <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                        <option value="">Select Ingredient...</option>
-                    </select>
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-bold text-red-400">Location</label>
-                    <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                        <option value="">Select Location...</option>
-                    </select>
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-bold text-red-400">Last seen price (Gold)</label>
-                    <input type="number" step="0.01" id="price-amount" placeholder="0.00" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                </div>
-                <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white transition">Record Price</button>
-            </form>
-        </section>
-
-        <!-- Primary Feature: Ingredient Price Catalog & Search -->
-        <section class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h2 class="text-lg font-semibold text-red-100">Ingredient Price Catalog</h2>
-                    <p class="text-xs text-red-400">Search any ingredient to check live prices across all discovered locations.</p>
-                </div>
-                <input type="text" id="catalog-search" oninput="renderCatalog()" placeholder="Search ingredient catalog..." class="w-full md:w-72 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
-            </div>
+    <div>
+        <!-- Navbar -->
+        <header class="bg-zinc-900 border-b border-red-950 p-4 flex justify-between items-center shadow-lg">
+            <h1 class="text-xl font-bold tracking-wider text-red-500 flex items-center gap-2">🧪 Solitude Alchemist Guild</h1>
             
-            <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[32rem] overflow-y-auto pr-1">
-                <p class="text-sm text-red-400 italic">No ingredients found.</p>
-            </div>
-        </section>
-
-        <!-- Secondary Section: Batch Simulator & Pricing Breakdown -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            <!-- Simulator Controls -->
-            <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
-                <h2 class="text-lg font-semibold text-red-100">Potion Batch Crafting Simulator</h2>
-                
-                <div class="flex gap-3">
-                    <select id="simulator-recipe-select" class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-red-200 focus:outline-none focus:border-red-600">
-                        <option value="">Select a Potion Recipe...</option>
-                    </select>
-                    <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-center text-red-200 focus:outline-none focus:border-red-600">
-                    <button onclick="addRecipeToBatch()" class="bg-red-900 hover:bg-red-800 border border-red-700 px-4 py-2 rounded text-sm font-semibold transition text-white">Add</button>
+            <div class="flex items-center gap-4">
+                <!-- Admin Control Toggles (Visible only when logged in) -->
+                <div id="admin-toggles" class="hidden flex items-center gap-2 border-r border-red-950 pr-4">
+                    <button onclick="openAdminModal('locations')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">📍 Locations</button>
+                    <button onclick="openAdminModal('ingredients')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">🌿 Ingredients</button>
+                    <button onclick="openAdminModal('recipes')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">📜 Potions</button>
                 </div>
 
-                <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-red-400 mb-2">Current Batch Queue</h3>
-                    <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto">
-                        <p class="text-sm text-red-400 italic">No potions added to batch yet.</p>
+                <!-- Guest Contribution Button (Visible only when logged out) -->
+                <button id="guest-contrib-btn" onclick="openGuestModal()" class="hidden bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition flex items-center gap-1.5">
+                    ✉️ Dispatch Scribe Request
+                </button>
+
+                <!-- Auth View -->
+                <div id="auth-container" class="flex items-center gap-3">
+                    <div id="logged-out-view" class="flex items-center gap-2">
+                        <input type="email" id="auth-email" placeholder="Email" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                        <input type="password" id="auth-password" placeholder="Password" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                        <button onclick="handleLogin()" class="bg-red-900 hover:bg-red-800 text-white border border-red-700 px-3 py-1 rounded text-xs font-semibold transition">Sign In</button>
+                    </div>
+                    <div id="logged-in-view" class="hidden flex items-center gap-3">
+                        <span id="user-display" class="text-xs text-red-300"></span>
+                        <button onclick="handleSignOut()" class="bg-zinc-900 hover:bg-zinc-800 border border-red-950 px-3 py-1 rounded text-xs font-semibold text-red-300 transition">Sign Out</button>
                     </div>
                 </div>
             </div>
+        </header>
 
-            <!-- Detailed Price Breakdown Matrix -->
-            <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-md font-semibold text-red-100">Batch Ingredient Sourcing Breakdown</h3>
-                    <span id="total-batch-cost" class="text-red-400 font-bold text-lg">Total Optimal: 0 Gold</span>
+        <!-- Main Container -->
+        <main class="max-w-7xl mx-auto p-6 space-y-6">
+
+            <!-- Top Section: Quick Price Logger (Visible ONLY to Admins/Logged-in users) -->
+            <section id="price-logger-section" class="hidden bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-red-950 pb-3">
+                    <div>
+                        <h2 class="text-lg font-semibold text-red-100">Record Ingredient Price</h2>
+                        <p class="text-xs text-red-400">Log or update live market pricing across discovered realms.</p>
+                    </div>
                 </div>
-                <div id="detailed-breakdown-container" class="space-y-3 max-h-48 overflow-y-auto pr-1">
-                    <p class="text-sm text-red-400 italic">Add items to batch to view pricing breakdowns.</p>
+
+                <!-- Direct Price Logger Form -->
+                <form id="direct-price-form" onsubmit="handlePriceSubmit(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase font-bold text-red-400">Ingredient</label>
+                        <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                            <option value="">Select Ingredient...</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase font-bold text-red-400">Location</label>
+                        <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                            <option value="">Select Location...</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase font-bold text-red-400">Last seen price (Gold)</label>
+                        <input type="number" step="0.01" id="price-amount" placeholder="0.00" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                    </div>
+                    <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white transition">Record Price</button>
+                </form>
+            </section>
+
+            <!-- Primary Feature: Ingredient Price Catalog & Search -->
+            <section class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-red-100">Ingredient Price Catalog</h2>
+                        <p class="text-xs text-red-400">Last seen prices around Skyrim</p>
+                    </div>
+                    <input type="text" id="catalog-search" oninput="renderCatalog()" placeholder="Search ingredient catalog..." class="w-full md:w-72 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
                 </div>
+                
+                <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[32rem] overflow-y-auto pr-1">
+                    <p class="text-sm text-red-400 italic">No ingredients found.</p>
+                </div>
+            </section>
+
+            <!-- Secondary Section: Batch Simulator & Pricing Breakdown -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Simulator Controls -->
+                <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
+                    <h2 class="text-lg font-semibold text-red-100">Potion Batch Crafting Simulator</h2>
+                    
+                    <div class="flex gap-3">
+                        <select id="simulator-recipe-select" class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-red-200 focus:outline-none focus:border-red-600">
+                            <option value="">Select a Potion Recipe...</option>
+                        </select>
+                        <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-center text-red-200 focus:outline-none focus:border-red-600">
+                        <button onclick="addRecipeToBatch()" class="bg-red-900 hover:bg-red-800 border border-red-700 px-4 py-2 rounded text-sm font-semibold transition text-white">Add</button>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-red-400 mb-2">Current Batch Queue</h3>
+                        <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto">
+                            <p class="text-sm text-red-400 italic">No potions added to batch yet.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Price Breakdown Matrix -->
+                <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-md font-semibold text-red-100">Batch Ingredient Sourcing Breakdown</h3>
+                        <span id="total-batch-cost" class="text-red-400 font-bold text-lg">Total Optimal: 0 Gold</span>
+                    </div>
+                    <div id="detailed-breakdown-container" class="space-y-3 max-h-48 overflow-y-auto pr-1">
+                        <p class="text-sm text-red-400 italic">Add items to batch to view pricing breakdowns.</p>
+                    </div>
+                </div>
+
             </div>
 
-        </div>
+        </main>
+    </div>
 
-    </main>
+    <!-- Footer -->
+    <footer class="bg-zinc-900 border-t border-red-950 py-4 px-6 text-center text-xs text-red-400 mt-12">
+        Questions or suggestions? Contact guild member <strong class="text-red-200">Loic Sauvage</strong> on Discord: <span class="font-mono text-red-300">@loicsauvage</span>
+    </footer>
 
     <!-- Generic Admin Modal -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-black/80 flex justify-center items-center p-4 z-50">
@@ -151,22 +158,22 @@
             
             <!-- In-character Warning Box -->
             <div class="bg-red-950/40 border border-red-900/60 rounded p-2.5 text-[11px] text-red-300 leading-relaxed">
-                ⚠️ <strong class="text-red-200">Guild Notice:</strong> You may only leave a note if you are physically present at the guild-headquarters.
+                ⚠️ <strong class="text-red-200">Guild Notice:</strong> You can only leave a note if you're at the guild-headquarters.
             </div>
 
-            <p class="text-xs text-red-300">Submit new locations, price updates, or general missives for master verification.</p>
+            <p class="text-xs text-red-300">Submit new locations, and price updates.</p>
             
             <div class="space-y-3">
                 <div class="space-y-1">
                     <label class="text-[10px] uppercase font-bold text-red-400">Contribution Type</label>
                     <select id="guest-contrib-type" onchange="toggleGuestFormFields()" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                        <option value="price">Price Change / New Price Offer</option>
+                        <option value="price">Price update</option>
                         <option value="location">New Location Suggestion</option>
                         <option value="letter">A letter</option>
                     </select>
                 </div>
 
-                <!-- Fields for Price Change -->
+                <!-- Fields for Price Update -->
                 <div id="guest-price-fields" class="space-y-3">
                     <div class="space-y-1">
                         <label class="text-[10px] uppercase font-bold text-red-400">Ingredient</label>
@@ -198,13 +205,13 @@
                 <div id="guest-letter-fields" class="space-y-3 hidden">
                     <div class="space-y-1">
                         <label class="text-[10px] uppercase font-bold text-red-400">Your Missive / Note</label>
-                        <textarea id="guest-letter-content" rows="4" placeholder="Write your letter to the guild masters here..." class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600"></textarea>
+                        <textarea id="guest-letter-content" rows="4" placeholder="Write your letter here..." class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600"></textarea>
                     </div>
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-bold text-red-400">Your Alchemist Name / Title</label>
-                    <input type="text" id="guest-author" placeholder="e.g. Master Eydis / Wandering Alchemist" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <label class="text-[10px] uppercase font-bold text-red-400">Your Name</label>
+                    <input type="text" id="guest-author" placeholder="e.g. Loic Sauvage" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
                 </div>
 
                 <button onclick="submitGuestWebhookRequest()" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white transition">Seal and Dispatch Note</button>
@@ -251,7 +258,7 @@
         };
 
         // REPLACE WITH YOUR ACTUAL WEBHOOK URL
-        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1546052671788814367/16i9QCmlLHI-_n8wjW_V-Vdyu0CpqvO4EVH_uNNGa9GcQh0SbHGSC7k2Pr8NR7FWVWkA";
+        const DISCORD_WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL_HERE";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -434,7 +441,7 @@
         // Scribe Dispatch integration
         window.submitGuestWebhookRequest = async () => {
             const type = document.getElementById("guest-contrib-type").value;
-            const author = document.getElementById("guest-author").value.trim() || "A Wandering Alchemist";
+            const author = document.getElementById("guest-author").value.trim() || "A Guild Member";
             
             let contentMessage = "";
 
@@ -447,10 +454,10 @@
                 const locationName = locSelect.options[locSelect.selectedIndex]?.text || "Unknown";
 
                 if (!ingSelect.value || !locSelect.value || !priceVal) {
-                    return alert("Please fill out all price contribution fields.");
+                    return alert("Please fill out all price update fields.");
                 }
 
-                contentMessage = `💰 **Price Update Request**\n• **Submitted By:** ${author}\n• **Ingredient:** ${ingredientName}\n• **Location:** ${locationName}\n• **Last Seen Price:** ${priceVal} Gold`;
+                contentMessage = `💰 **Price Update**\n• **Submitted By:** ${author}\n• **Ingredient:** ${ingredientName}\n• **Location:** ${locationName}\n• **Last Seen Price:** ${priceVal} Gold`;
             } else if (type === 'location') {
                 const hold = document.getElementById("guest-loc-hold").value.trim();
                 const town = document.getElementById("guest-loc-town").value.trim();
@@ -470,7 +477,7 @@
             }
 
             if (DISCORD_WEBHOOK_URL.includes("YOUR_DISCORD_WEBHOOK_URL_HERE")) {
-                alert("Your missive has been placed on the guild master's desk! (Configure your DISCORD_WEBHOOK_URL to transmit live owls).");
+                alert("Your missive has been placed on the desk for review! (Configure your DISCORD_WEBHOOK_URL to transmit live owls).");
                 closeGuestModal();
                 return;
             }

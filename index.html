@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alchemist's Ledger - Potion Price & Batch Simulator</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+    <!-- Navbar -->
+    <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold tracking-wider text-emerald-400">🧪 Alchemist's Ledger</h1>
+        <div id="auth-container" class="flex items-center gap-4">
+            <span id="user-display" class="text-sm text-slate-400">Not signed in</span>
+            <button id="auth-btn" onclick="toggleAuth()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 rounded text-sm font-semibold transition">Sign In</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left Column: Batch Simulator -->
+        <section class="lg:col-span-2 bg-slate-900/50 border border-slate-800 rounded-xl p-6 shadow-xl">
+            <h2 class="text-lg font-semibold mb-4 text-emerald-300">Real-Time Potion Batch Simulator</h2>
+            
+            <!-- Add Potion Form -->
+            <div class="flex gap-3 mb-6">
+                <select id="simulator-recipe-select" class="flex-1 bg-slate-800 border border-slate-700 rounded p-2 text-sm">
+                    <option value="">Select a Potion Recipe...</option>
+                </select>
+                <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-slate-800 border border-slate-700 rounded p-2 text-sm text-center">
+                <button onclick="addRecipeToBatch()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded text-sm font-semibold transition">Add to Batch</button>
+            </div>
+
+            <!-- Batch List -->
+            <div class="mb-6">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Current Batch Queue</h3>
+                <div id="batch-queue-list" class="space-y-2 max-h-40 overflow-y-auto pr-2">
+                    <p class="text-sm text-slate-500 italic">No potions added to batch yet.</p>
+                </div>
+            </div>
+
+            <!-- Optimization Results -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Optimal Sourcing Breakdown</h3>
+                    <span id="total-batch-cost" class="text-emerald-400 font-bold">Total: 0 Gold</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-800 text-slate-300">
+                            <tr>
+                                <th class="p-2">Ingredient</th>
+                                <th class="p-2">Needed Qty</th>
+                                <th class="p-2">Best Store / Person</th>
+                                <th class="p-2">Location</th>
+                                <th class="p-2 text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="optimization-results-body" class="divide-y divide-slate-800">
+                            <tr>
+                                <td colspan="5" class="p-4 text-center text-slate-500 italic">Configure batch to calculate optimal prices.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Admin & Data Entry Panel -->
+        <aside class="space-y-6">
+            
+            <!-- Location Manager -->
+            <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6 shadow-xl">
+                <h3 class="text-md font-semibold mb-3 text-amber-400">📍 Add Sourcing Location</h3>
+                <form id="location-form" onsubmit="handleLocationSubmit(event)" class="space-y-3">
+                    <input type="text" id="loc-hold" placeholder="Hold / Region (e.g., Skyrim)" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm">
+                    <input type="text" id="loc-city" placeholder="City / Town (e.g., Whiterun)" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm">
+                    <input type="text" id="loc-store" placeholder="Store / Person (e.g., Arcadia)" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm">
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 py-2 rounded text-sm font-semibold transition">Save Location</button>
+                </form>
+            </div>
+
+            <!-- Price Logging Manager -->
+            <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6 shadow-xl">
+                <h3 class="text-md font-semibold mb-3 text-cyan-400">💰 Log Ingredient Price</h3>
+                <form id="price-form" onsubmit="handlePriceSubmit(event)" class="space-y-3">
+                    <select id="price-ingredient-select" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm">
+                        <option value="">Select Ingredient...</option>
+                    </select>
+                    <select id="price-location-select" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm">
+                        <option value="">Select Location...</option>
+                    </select>
+                    <input type="number" step="0.01" id="price-amount" placeholder="Price per Unit" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm">
+                    <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 py-2 rounded text-sm font-semibold transition">Record Price</button>
+                </form>
+            </div>
+
+        </aside>
+    </main>
+
+    <!-- Connect Modular App Script -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>

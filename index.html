@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alchemist's Ledger - Potion Price & Batch Simulator</title>
+    <title>Alchemist's Ledger - Realtime Potion Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
 
     <!-- Navbar -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
-        <h1 class="text-xl font-bold tracking-wider text-emerald-400">🧪 Alchemist's Ledger</h1>
+        <h1 class="text-xl font-bold tracking-wider text-emerald-400">🧪 Alchemist's Ledger (RTDB)</h1>
         
-        <!-- Auth Form / Status -->
         <div id="auth-container" class="flex items-center gap-3">
             <div id="logged-out-view" class="flex items-center gap-2">
-                <input type="email" id="auth-email" placeholder="Email" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-white">
-                <input type="password" id="auth-password" placeholder="Password" class="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                <input type="email" id="auth-email" placeholder="Email" class="bg-slate-850 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                <input type="password" id="auth-password" placeholder="Password" class="bg-slate-850 border border-slate-700 rounded px-2 py-1 text-xs text-white">
                 <button onclick="handleLogin()" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded text-xs font-semibold transition">Sign In</button>
             </div>
             <div id="logged-in-view" class="hidden flex items-center gap-3">
@@ -29,112 +28,365 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Left Column: Batch Simulator (Visible to Everyone) -->
-        <section class="lg:col-span-2 bg-slate-900/50 border border-slate-800 rounded-xl p-6 shadow-xl">
-            <h2 class="text-lg font-semibold mb-4 text-emerald-300">Real-Time Potion Batch Simulator</h2>
+        <!-- Left Column: Batch Simulator & Detailed Comparison -->
+        <section class="lg:col-span-2 space-y-6">
             
-            <!-- Add Potion Form -->
-            <div class="flex gap-3 mb-6">
-                <select id="simulator-recipe-select" class="flex-1 bg-slate-800 border border-slate-700 rounded p-2 text-sm">
-                    <option value="">Select a Potion Recipe...</option>
-                </select>
-                <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-slate-800 border border-slate-700 rounded p-2 text-sm text-center">
-                <button onclick="addRecipeToBatch()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded text-sm font-semibold transition">Add to Batch</button>
+            <!-- Simulator Controls -->
+            <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6 shadow-xl">
+                <h2 class="text-lg font-semibold mb-4 text-emerald-300">Real-Time Potion Batch Simulator</h2>
+                
+                <div class="flex gap-3 mb-4">
+                    <select id="simulator-recipe-select" class="flex-1 bg-slate-800 border border-slate-700 rounded p-2 text-sm">
+                        <option value="">Select a Potion Recipe...</option>
+                    </select>
+                    <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-slate-800 border border-slate-700 rounded p-2 text-sm text-center">
+                    <button onclick="addRecipeToBatch()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded text-sm font-semibold transition">Add to Batch</button>
+                </div>
+
+                <!-- Grouped Batch List -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Current Batch Queue (Auto-Grouped)</h3>
+                    <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                        <p class="text-sm text-slate-500 italic">No potions added to batch yet.</p>
+                    </div>
+                </div>
             </div>
 
-            <!-- Batch List -->
-            <div class="mb-6">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Current Batch Queue</h3>
-                <div id="batch-queue-list" class="space-y-2 max-h-40 overflow-y-auto pr-2">
-                    <p class="text-sm text-slate-500 italic">No potions added to batch yet.</p>
+            <!-- Detailed Price Breakdown Matrix -->
+            <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-6 shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-md font-semibold text-cyan-300">Ingredient Sourcing & All Store Options</h3>
+                    <span id="total-batch-cost" class="text-emerald-400 font-bold text-lg">Total Optimal: 0 Gold</span>
+                </div>
+                <div id="detailed-breakdown-container" class="space-y-4">
+                    <p class="text-sm text-slate-500 italic">Add items to batch to view pricing breakdowns.</p>
                 </div>
             </div>
 
-            <!-- Optimization Results -->
-            <div>
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Optimal Sourcing Breakdown</h3>
-                    <span id="total-batch-cost" class="text-emerald-400 font-bold">Total: 0 Gold</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-800 text-slate-300">
-                            <tr>
-                                <th class="p-2">Ingredient</th>
-                                <th class="p-2">Needed Qty</th>
-                                <th class="p-2">Best Store / Person</th>
-                                <th class="p-2">Location</th>
-                                <th class="p-2 text-right">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody id="optimization-results-body" class="divide-y divide-slate-800">
-                            <tr>
-                                <td colspan="5" class="p-4 text-center text-slate-500 italic">Configure batch to calculate optimal prices.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </section>
 
-        <!-- Right Column: Hidden Admin Panel (Visible only to authenticated admins) -->
+        <!-- Right Column: Admin Panel (Visible when logged in) -->
         <aside id="admin-panel" class="hidden space-y-6">
-            <div class="bg-slate-900 border-2 border-amber-500/50 rounded-xl p-6 shadow-xl">
-                <h2 class="text-md font-bold mb-4 text-amber-400 flex items-center gap-2">🛠️ Admin Panel</h2>
+            <div class="bg-slate-900 border-2 border-amber-500/50 rounded-xl p-6 shadow-xl space-y-6">
+                <h2 class="text-md font-bold text-amber-400">🛠️ Admin Panel</h2>
                 
-                <!-- Add Location Form -->
-                <div class="mb-6 pb-6 border-b border-slate-800">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Add Location</h3>
-                    <form id="location-form" onsubmit="handleLocationSubmit(event)" class="space-y-2">
-                        <input type="text" id="loc-hold" placeholder="Hold / Region" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                        <input type="text" id="loc-city" placeholder="City / Town" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                        <input type="text" id="loc-store" placeholder="Store / Person Name" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 py-1.5 rounded text-xs font-semibold transition">Save Location</button>
-                    </form>
-                </div>
+                <!-- Add Location -->
+                <form id="location-form" onsubmit="handleLocationSubmit(event)" class="space-y-2 pb-4 border-b border-slate-800">
+                    <h3 class="text-xs font-bold uppercase text-slate-300">Add Location</h3>
+                    <input type="text" id="loc-hold" placeholder="Hold / Region" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
+                    <input type="text" id="loc-city" placeholder="City / Town" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
+                    <input type="text" id="loc-store" placeholder="Store / Person Name" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 py-1.5 rounded text-xs font-semibold">Save Location</button>
+                </form>
 
-                <!-- Add Ingredient Form -->
-                <div class="mb-6 pb-6 border-b border-slate-800">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Add Ingredient</h3>
-                    <form id="ingredient-form" onsubmit="handleIngredientSubmit(event)" class="space-y-2">
-                        <input type="text" id="ing-name" placeholder="Ingredient Name" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                        <input type="text" id="ing-unit" placeholder="Unit (e.g., oz, pinch)" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 py-1.5 rounded text-xs font-semibold transition">Save Ingredient</button>
-                    </form>
-                </div>
+                <!-- Add Ingredient -->
+                <form id="ingredient-form" onsubmit="handleIngredientSubmit(event)" class="space-y-2 pb-4 border-b border-slate-800">
+                    <h3 class="text-xs font-bold uppercase text-slate-300">Add Ingredient</h3>
+                    <input type="text" id="ing-name" placeholder="Ingredient Name" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
+                    <input type="text" id="ing-unit" placeholder="Unit (e.g., oz, pinch)" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
+                    <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 py-1.5 rounded text-xs font-semibold">Save Ingredient</button>
+                </form>
 
-                <!-- Add Potion Recipe Form -->
-                <div class="mb-6 pb-6 border-b border-slate-800">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Add Potion Recipe</h3>
-                    <form id="recipe-form" onsubmit="handleRecipeSubmit(event)" class="space-y-2">
-                        <input type="text" id="recipe-name" placeholder="Potion Name" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                        <div id="recipe-ingredients-container" class="space-y-2 bg-slate-950 p-2 rounded border border-slate-800">
-                            <p class="text-xs text-slate-400 italic">Recipe Ingredients mapping added dynamically via app script.</p>
-                        </div>
-                        <button type="button" onclick="addIngredientRowToRecipeForm()" class="text-xs text-indigo-400 hover:underline">+ Add Ingredient Requirement</button>
-                        <button type="submit" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 py-1.5 rounded text-xs font-semibold transition">Save Recipe</button>
-                    </form>
-                </div>
+                <!-- Add Recipe -->
+                <form id="recipe-form" onsubmit="handleRecipeSubmit(event)" class="space-y-2 pb-4 border-b border-slate-800">
+                    <h3 class="text-xs font-bold uppercase text-slate-300">Add Potion Recipe</h3>
+                    <input type="text" id="recipe-name" placeholder="Potion Name" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
+                    <div id="recipe-ingredients-container" class="space-y-1 bg-slate-950 p-2 rounded border border-slate-800">
+                        <p class="text-xs text-slate-500 italic">Add ingredients below</p>
+                    </div>
+                    <button type="button" onclick="addIngredientRowToRecipeForm()" class="text-xs text-indigo-400 hover:underline">+ Add Ingredient Requirement</button>
+                    <button type="submit" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 py-1.5 rounded text-xs font-semibold">Save Recipe</button>
+                </form>
 
-                <!-- Log Price Form -->
-                <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Log Ingredient Price</h3>
-                    <form id="price-form" onsubmit="handlePriceSubmit(event)" class="space-y-2">
-                        <select id="price-ingredient-select" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                            <option value="">Select Ingredient...</option>
-                        </select>
-                        <select id="price-location-select" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                            <option value="">Select Location...</option>
-                        </select>
-                        <input type="number" step="0.01" id="price-amount" placeholder="Price per Unit" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 py-1.5 rounded text-xs font-semibold transition">Record Price</button>
-                    </form>
-                </div>
+                <!-- Log Price -->
+                <form id="price-form" onsubmit="handlePriceSubmit(event)" class="space-y-2">
+                    <h3 class="text-xs font-bold uppercase text-slate-300">Log Ingredient Price</h3>
+                    <select id="price-ingredient-select" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
+                        <option value="">Select Ingredient...</option>
+                    </select>
+                    <select id="price-location-select" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
+                        <option value="">Select Location...</option>
+                    </select>
+                    <input type="number" step="0.01" id="price-amount" placeholder="Price per Unit" required class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 py-1.5 rounded text-xs font-semibold">Record Price</button>
+                </form>
             </div>
         </aside>
 
     </main>
 
-    <script type="module" src="app.js"></script>
+    <!-- Application Script using Realtime Database SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let cachedRecipes = {};
+        let cachedIngredients = {};
+        let cachedLocations = {};
+        let cachedPrices = {};
+        let currentBatch = []; // Array of { recipeId, count }
+
+        // Auth handlers
+        window.handleLogin = async () => {
+            const email = document.getElementById("auth-email").value;
+            const password = document.getElementById("auth-password").value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (err) {
+                alert("Login error: " + err.message);
+            }
+        };
+
+        window.handleSignOut = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            const outView = document.getElementById("logged-out-view");
+            const inView = document.getElementById("logged-in-view");
+            const adminPanel = document.getElementById("admin-panel");
+            if (user) {
+                outView.classList.add("hidden");
+                inView.classList.remove("hidden");
+                document.getElementById("user-display").textContent = user.email;
+                adminPanel.classList.remove("hidden");
+            } else {
+                outView.classList.remove("hidden");
+                inView.classList.add("hidden");
+                adminPanel.classList.add("hidden");
+            }
+        });
+
+        // Real-time Database Listeners (Instant Sync without refresh)
+        onValue(ref(db, 'locations'), (snapshot) => {
+            cachedLocations = snapshot.val() || {};
+            const locSelect = document.getElementById("price-location-select");
+            locSelect.innerHTML = '<option value="">Select Location...</option>';
+            for (const [id, loc] of Object.entries(cachedLocations)) {
+                locSelect.innerHTML += `<option value="${id}">${loc.hold} > ${loc.city} > ${loc.storeName}</option>`;
+            }
+            runOptimization();
+        });
+
+        onValue(ref(db, 'ingredients'), (snapshot) => {
+            cachedIngredients = snapshot.val() || {};
+            const ingSelect = document.getElementById("price-ingredient-select");
+            ingSelect.innerHTML = '<option value="">Select Ingredient...</option>';
+            for (const [id, ing] of Object.entries(cachedIngredients)) {
+                ingSelect.innerHTML += `<option value="${id}">${ing.name} (${ing.unit})</option>`;
+            }
+            runOptimization();
+        });
+
+        onValue(ref(db, 'recipes'), (snapshot) => {
+            cachedRecipes = snapshot.val() || {};
+            const recipeSelect = document.getElementById("simulator-recipe-select");
+            recipeSelect.innerHTML = '<option value="">Select a Potion Recipe...</option>';
+            for (const [id, rec] of Object.entries(cachedRecipes)) {
+                recipeSelect.innerHTML += `<option value="${id}">${rec.name}</option>`;
+            }
+            runOptimization();
+        });
+
+        onValue(ref(db, 'prices'), (snapshot) => {
+            cachedPrices = snapshot.val() || {};
+            runOptimization();
+        });
+
+        // Admin Actions
+        window.handleLocationSubmit = (e) => {
+            e.preventDefault();
+            push(ref(db, 'locations'), {
+                hold: document.getElementById("loc-hold").value.trim(),
+                city: document.getElementById("loc-city").value.trim(),
+                storeName: document.getElementById("loc-store").value.trim()
+            });
+            e.target.reset();
+        };
+
+        window.handleIngredientSubmit = (e) => {
+            e.preventDefault();
+            push(ref(db, 'ingredients'), {
+                name: document.getElementById("ing-name").value.trim(),
+                unit: document.getElementById("ing-unit").value.trim()
+            });
+            e.target.reset();
+        };
+
+        window.addIngredientRowToRecipeForm = () => {
+            const container = document.getElementById("recipe-ingredients-container");
+            const rowId = "row-" + Date.now();
+            let options = '<option value="">Ingredient...</option>';
+            for (const [id, ing] of Object.entries(cachedIngredients)) {
+                options += `<option value="${id}">${ing.name}</option>`;
+            }
+            const div = document.createElement("div");
+            div.id = rowId;
+            div.className = "flex gap-2 items-center mt-1";
+            div.innerHTML = `
+                <select class="recipe-ing-select flex-1 bg-slate-900 border border-slate-700 rounded p-1 text-xs" required>${options}</select>
+                <input type="number" step="0.1" placeholder="Qty" class="recipe-ing-qty w-16 bg-slate-900 border border-slate-700 rounded p-1 text-xs" required>
+                <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-400 font-bold text-xs">X</button>
+            `;
+            container.appendChild(div);
+        };
+
+        window.handleRecipeSubmit = (e) => {
+            e.preventDefault();
+            const name = document.getElementById("recipe-name").value.trim();
+            const rows = document.querySelectorAll("#recipe-ingredients-container > div");
+            const ingredients = {};
+            rows.forEach(r => {
+                const id = r.querySelector(".recipe-ing-select").value;
+                const qty = parseFloat(r.querySelector(".recipe-ing-qty").value);
+                if (id && qty) ingredients[id] = qty;
+            });
+            if (Object.keys(ingredients).length === 0) return alert("Add ingredients!");
+            push(ref(db, 'recipes'), { name, ingredients });
+            e.target.reset();
+            document.getElementById("recipe-ingredients-container").innerHTML = '<p class="text-xs text-slate-500 italic">Add ingredients below</p>';
+        };
+
+        window.handlePriceSubmit = (e) => {
+            e.preventDefault();
+            push(ref(db, 'prices'), {
+                ingredientId: document.getElementById("price-ingredient-select").value,
+                locationId: document.getElementById("price-location-select").value,
+                price: parseFloat(document.getElementById("price-amount").value)
+            });
+            e.target.reset();
+        };
+
+        // Batch Grouping Logic
+        window.addRecipeToBatch = () => {
+            const recipeId = document.getElementById("simulator-recipe-select").value;
+            const count = parseInt(document.getElementById("simulator-qty").value) || 1;
+            if (!recipeId) return;
+
+            const existing = currentBatch.find(item => item.recipeId === recipeId);
+            if (existing) {
+                existing.count += count;
+            } else {
+                currentBatch.push({ recipeId, count });
+            }
+            renderBatchQueue();
+            runOptimization();
+        };
+
+        window.removeBatchItem = (index) => {
+            currentBatch.splice(index, 1);
+            renderBatchQueue();
+            runOptimization();
+        };
+
+        function renderBatchQueue() {
+            const container = document.getElementById("batch-queue-list");
+            if (currentBatch.length === 0) {
+                container.innerHTML = '<p class="text-sm text-slate-500 italic">No potions added to batch yet.</p>';
+                return;
+            }
+            container.innerHTML = currentBatch.map((item, idx) => {
+                const rec = cachedRecipes[item.recipeId] || { name: "Unknown" };
+                return `
+                    <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-full text-xs">
+                        <span>${rec.name} <strong>x${item.count}</strong></span>
+                        <button onclick="removeBatchItem(${idx})" class="text-rose-400 font-bold ml-1">×</button>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        // Optimization Engine with All Store Options Display
+        function runOptimization() {
+            const totalDemands = {};
+            currentBatch.forEach(item => {
+                const rec = cachedRecipes[item.recipeId];
+                if (!rec || !rec.ingredients) return;
+                for (const [ingId, qty] of Object.entries(rec.ingredients)) {
+                    totalDemands[ingId] = (totalDemands[ingId] || 0) + (qty * item.count);
+                }
+            });
+
+            const container = document.getElementById("detailed-breakdown-container");
+            const totalCostDisplay = document.getElementById("total-batch-cost");
+
+            if (Object.keys(totalDemands).length === 0) {
+                container.innerHTML = '<p class="text-sm text-slate-500 italic">Add items to batch to view pricing breakdowns.</p>';
+                totalCostDisplay.textContent = "Total Optimal: 0 Gold";
+                return;
+            }
+
+            let overallOptimalTotal = 0;
+            let html = "";
+
+            for (const [ingId, neededQty] of Object.entries(totalDemands)) {
+                const ingMeta = cachedIngredients[ingId] || { name: "Unknown Ingredient", unit: "units" };
+                
+                // Find all store prices for this ingredient
+                const storeOffers = [];
+                for (const [priceId, p] of Object.entries(cachedPrices)) {
+                    if (p.ingredientId === ingId) {
+                        storeOffers.push(p);
+                    }
+                }
+
+                // Sort by price ascending
+                storeOffers.sort((a, b) => a.price - b.price);
+
+                let bestSubtotal = 0;
+                let bestStoreText = "No stores available";
+
+                if (storeOffers.length > 0) {
+                    bestSubtotal = storeOffers[0].price * neededQty;
+                    overallOptimalTotal += bestSubtotal;
+                }
+
+                html += `
+                    <div class="bg-slate-800/60 border border-slate-700/60 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-emerald-300">${ingMeta.name}</span>
+                            <span class="text-sm bg-slate-700 px-2 py-0.5 rounded">Needed: ${neededQty} ${ingMeta.unit}</span>
+                        </div>
+                        <div class="text-xs text-slate-300 space-y-1">
+                            <p class="font-semibold text-cyan-400 mb-1">Available Store Prices:</p>
+                `;
+
+                if (storeOffers.length === 0) {
+                    html += `<p class="italic text-amber-400">No prices logged across any locations yet.</p>`;
+                } else {
+                    storeOffers.forEach((offer, idx) => {
+                        const loc = cachedLocations[offer.locationId] || { hold: "", city: "", storeName: "Unknown" };
+                        const isCheapest = idx === 0;
+                        const rowStyle = isCheapest ? "bg-emerald-950/40 border border-emerald-500/40 text-emerald-200" : "bg-slate-900/40";
+                        
+                        html += `
+                            <div class="flex justify-between items-center p-1.5 rounded ${rowStyle}">
+                                <span>${loc.storeName} <span class="text-[10px] text-slate-400">(${loc.hold} / ${loc.city})</span> ${isCheapest ? '⭐ <strong>(Cheapest)</strong>' : ''}</span>
+                                <span class="font-mono">${offer.price} Gold/${ingMeta.unit} (Subtotal: ${(offer.price * neededQty).toFixed(2)})</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `</div></div>`;
+            }
+
+            container.innerHTML = html;
+            totalCostDisplay.textContent = `Total Optimal: ${overallOptimalTotal.toFixed(2)} Gold`;
+        }
+    </script>
 </body>
 </html>

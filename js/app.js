@@ -1,0 +1,399 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+// Global Variables Injected by GitHub Actions Workflow
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1547449768383348776/zTpJYP8t1V4-ZRE49N-_5s-a6whwsOBD6WmOxQYnmhdrD_DlkiDNIy3NIzBb5iHk9M3h";
+const DEFAULT_BOT_NAME = "New Letter";;
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDTQPUXzYr8UAawpvNce6wbXJC07-ZOmeo",
+    authDomain: "alchemy-price-tracker.firebaseapp.com",
+    databaseURL: "https://alchemy-price-tracker-default-rtdb.firebaseio.com",
+    projectId: "alchemy-price-tracker",
+    storageBucket: "alchemy-price-tracker.firebasestorage.app",
+    messagingSenderId: "357962236614",
+    appId: "1:357962236614:web:770c78966226a35f138dc7",
+    measurementId: "G-J94V9BMR1Q"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// Application State
+const state = {
+    cachedRecipes: {},
+    cachedIngredients: {},
+    cachedLocations: {},
+    cachedPrices: {},
+    currentBatch: []
+};
+
+// Notification Utility
+function showToast(message, type = 'success') {
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    const bgColors = {
+        success: "bg-zinc-900 border-red-800 text-red-100",
+        error: "bg-red-950 border-red-700 text-red-100",
+        info: "bg-zinc-900 border-zinc-700 text-zinc-100"
+    };
+
+    toast.className = `pointer-events-auto px-4 py-3 rounded-lg border shadow-xl text-xs flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 ${bgColors[type] || bgColors.success}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => toast.classList.remove("translate-y-2", "opacity-0"), 10);
+    setTimeout(() => {
+        toast.classList.add("translate-y-2", "opacity-0");
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
+}
+
+// UI Rendering Functions
+function populateDropdowns() {
+    const ingSelects = [
+        document.getElementById("price-ingredient-select"),
+        document.getElementById("guest-ingredient-select")
+    ];
+    ingSelects.forEach(select => {
+        if (!select) return;
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">Select Ingredient...</option>' +
+            Object.entries(state.cachedIngredients)
+                .map(([id, ing]) => `<option value="${id}">${ing.name}</option>`)
+                .join("");
+        select.value = currentVal;
+    });
+
+    const locSelects = [
+        document.getElementById("price-location-select"),
+        document.getElementById("guest-location-select"),
+        document.getElementById("catalog-location-filter")
+    ];
+    locSelects.forEach(select => {
+        if (!select) return;
+        const currentVal = select.value;
+        const isFilter = select.id === "catalog-location-filter";
+        select.innerHTML = `<option value="">${isFilter ? 'Filter by Location (All)' : 'Select Location...'}</option>` +
+            Object.entries(state.cachedLocations)
+                .map(([id, loc]) => `<option value="${id}">${loc.hold} / ${loc.town}</option>`)
+                .join("");
+        select.value = currentVal;
+    });
+
+    const recipeSelect = document.getElementById("simulator-recipe-select");
+    if (recipeSelect) {
+        const currentVal = recipeSelect.value;
+        recipeSelect.innerHTML = '<option value="">Select a Potion Recipe...</option>' +
+            Object.entries(state.cachedRecipes)
+                .map(([id, rec]) => `<option value="${id}">${rec.name}</option>`)
+                .join("");
+        recipeSelect.value = currentVal;
+    }
+}
+
+function renderCatalog() {
+    const container = document.getElementById("catalog-container");
+    if (!container) return;
+
+    const query = (document.getElementById("catalog-search")?.value || "").toLowerCase();
+    const selectedLocFilter = document.getElementById("catalog-location-filter")?.value;
+
+    const filteredIngredients = Object.entries(state.cachedIngredients).filter(([id, ing]) => {
+        const matchesSearch = ing.name.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+        if (selectedLocFilter) {
+            return Object.values(state.cachedPrices).some(p => p.ingredientId === id && p.locationId === selectedLocFilter);
+        }
+        return true;
+    }).sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
+
+    if (filteredIngredients.length === 0) {
+        container.innerHTML = '<p class="text-sm text-red-400 italic">No matching ingredients found.</p>';
+        return;
+    }
+
+    container.innerHTML = filteredIngredients.map(([ingId, ing]) => {
+        const offers = Object.values(state.cachedPrices)
+            .filter(p => p.ingredientId === ingId && (!selectedLocFilter || p.locationId === selectedLocFilter))
+            .sort((a, b) => a.price - b.price);
+
+        const offersHtml = offers.length === 0 
+            ? '<p class="text-xs text-zinc-500 italic">No price records yet.</p>'
+            : offers.map((offer, idx) => {
+                const loc = state.cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
+                return `
+                    <div class="flex justify-between items-center p-1.5 rounded text-xs ${idx === 0 ? 'bg-zinc-950 text-red-100 border border-red-900 font-medium' : 'bg-zinc-900/50 text-red-400'}">
+                        <span>${loc.hold} / ${loc.town} ${idx === 0 ? '⭐' : ''}</span>
+                        <span class="font-mono">${offer.price} Gold</span>
+                    </div>`;
+            }).join("");
+
+        return `
+            <div class="bg-zinc-950/60 border border-red-950 rounded-lg p-4 space-y-2 flex flex-col h-48">
+                <h3 class="font-bold text-red-100 text-sm border-b border-red-950 pb-1 flex-shrink-0">${ing.name}</h3>
+                <div class="space-y-1 overflow-y-auto pr-1 flex-1">${offersHtml}</div>
+            </div>`;
+    }).join("");
+}
+
+function runOptimization() {
+    const totalDemands = {};
+    state.currentBatch.forEach(item => {
+        const rec = state.cachedRecipes[item.recipeId];
+        if (!rec || !rec.ingredients) return;
+        for (const [ingId, qty] of Object.entries(rec.ingredients)) {
+            totalDemands[ingId] = (totalDemands[ingId] || 0) + (qty * item.count);
+        }
+    });
+
+    const container = document.getElementById("detailed-breakdown-container");
+    const totalCostDisplay = document.getElementById("total-batch-cost");
+
+    if (!container) return;
+
+    if (Object.keys(totalDemands).length === 0) {
+        container.innerHTML = '<p class="text-sm text-red-400 italic">Add items to batch to view pricing breakdowns.</p>';
+        if (totalCostDisplay) totalCostDisplay.textContent = "Total Optimal: 0 Gold";
+        return;
+    }
+
+    let overallOptimalTotal = 0;
+    let html = "";
+
+    for (const [ingId, neededQty] of Object.entries(totalDemands)) {
+        const ingMeta = state.cachedIngredients[ingId] || { name: "Unknown Ingredient" };
+        const storeOffers = Object.values(state.cachedPrices)
+            .filter(p => p.ingredientId === ingId)
+            .sort((a, b) => a.price - b.price);
+
+        if (storeOffers.length > 0) {
+            overallOptimalTotal += storeOffers[0].price * neededQty;
+        }
+
+        html += `
+            <div class="bg-zinc-950/40 border border-red-950 rounded-lg p-3">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="font-bold text-red-100 text-xs">${ingMeta.name}</span>
+                    <span class="text-xs bg-zinc-900 border border-red-950 px-2 py-0.5 rounded text-red-300">Needed: ${neededQty}</span>
+                </div>
+            </div>`;
+    }
+
+    container.innerHTML = html;
+    if (totalCostDisplay) totalCostDisplay.textContent = `Total Optimal: ${overallOptimalTotal.toFixed(2)} Gold`;
+}
+
+function renderBatchQueue() {
+    const container = document.getElementById("batch-queue-list");
+    if (!container) return;
+
+    if (state.currentBatch.length === 0) {
+        container.innerHTML = '<p class="text-sm text-red-400 italic">No potions added to batch yet.</p>';
+        return;
+    }
+
+    container.innerHTML = state.currentBatch.map((item, idx) => {
+        const rec = state.cachedRecipes[item.recipeId] || { name: "Unknown" };
+        return `
+            <div class="flex items-center gap-2 bg-zinc-950 border border-red-950 px-3 py-1.5 rounded-full text-xs text-red-200">
+                <span>${rec.name} <strong>x${item.count}</strong></span>
+                <button data-remove-idx="${idx}" class="remove-batch-btn text-red-400 hover:text-white font-bold ml-1">×</button>
+            </div>`;
+    }).join("");
+
+    container.querySelectorAll('.remove-batch-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-remove-idx'));
+            state.currentBatch.splice(idx, 1);
+            renderBatchQueue();
+            runOptimization();
+        });
+    });
+}
+
+// Guest Form Field Toggler
+function updateGuestFormFields() {
+    const type = document.getElementById("guest-contrib-type")?.value || "price";
+    document.getElementById("guest-price-fields")?.classList.toggle("hidden", type !== "price");
+    document.getElementById("guest-location-fields")?.classList.toggle("hidden", type !== "location");
+    document.getElementById("guest-letter-fields")?.classList.toggle("hidden", type !== "letter");
+}
+
+// App Initialization
+function initApp() {
+    // 1. Auth Listener
+    onAuthStateChanged(auth, (user) => {
+        const authForm = document.getElementById("auth-form");
+        const loggedInView = document.getElementById("logged-in-view");
+        const adminToggles = document.getElementById("admin-toggles");
+        const guestContribBtn = document.getElementById("guest-contrib-btn");
+        const priceLoggerSection = document.getElementById("price-logger-section");
+
+        const isLoggedIn = !!user;
+
+        if (authForm) authForm.classList.toggle("hidden", isLoggedIn);
+        if (loggedInView) loggedInView.classList.toggle("hidden", !isLoggedIn);
+        if (adminToggles) adminToggles.classList.toggle("hidden", !isLoggedIn);
+        if (priceLoggerSection) priceLoggerSection.classList.toggle("hidden", !isLoggedIn);
+        if (guestContribBtn) guestContribBtn.classList.toggle("hidden", isLoggedIn);
+
+        if (isLoggedIn) {
+            const userDisplay = document.getElementById("user-display");
+            if (userDisplay) userDisplay.textContent = user.email;
+        }
+    });
+
+    // 2. Authentication Submit Events
+    document.getElementById("auth-form")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("auth-email").value;
+        const password = document.getElementById("auth-password").value;
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            showToast("Successfully signed in!", "success");
+        } catch (err) {
+            showToast("Login error: " + err.message, "error");
+        }
+    });
+
+    document.getElementById("btn-signout")?.addEventListener("click", () => {
+        signOut(auth);
+        showToast("Signed out.", "info");
+    });
+
+    // 3. Guest Modal Events
+    const guestModal = document.getElementById("guest-modal");
+    document.getElementById("guest-contrib-btn")?.addEventListener("click", () => {
+        guestModal?.classList.remove("hidden");
+        updateGuestFormFields();
+    });
+
+    document.getElementById("btn-close-guest")?.addEventListener("click", () => {
+        guestModal?.classList.add("hidden");
+    });
+
+    document.getElementById("guest-contrib-type")?.addEventListener("change", updateGuestFormFields);
+
+    // 4. Webhook Dispatch Handling
+    document.getElementById("guest-form")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const type = document.getElementById("guest-contrib-type").value;
+        const author = document.getElementById("guest-author").value.trim() || "A Guild Member";
+        let contentMessage = "";
+
+        if (type === 'price') {
+            const ingSelect = document.getElementById("guest-ingredient-select");
+            const locSelect = document.getElementById("guest-location-select");
+            const priceVal = document.getElementById("guest-price-amount").value;
+            if (!ingSelect.value || !locSelect.value || !priceVal) return showToast("Fill all price fields.", "error");
+            
+            const ingText = ingSelect.options[ingSelect.selectedIndex].text;
+            const locText = locSelect.options[locSelect.selectedIndex].text;
+            contentMessage = `💰 **Price Update**\n• **By:** ${author}\n• **Ingredient:** ${ingText}\n• **Location:** ${locText}\n• **Price:** ${priceVal} Gold`;
+        } else if (type === 'location') {
+            const hold = document.getElementById("guest-loc-hold").value.trim();
+            const town = document.getElementById("guest-loc-town").value.trim();
+            if (!hold || !town) return showToast("Fill hold and town fields.", "error");
+            contentMessage = `📍 **Location Request**\n• **By:** ${author}\n• **Location:** ${hold} / ${town}`;
+        } else {
+            const letter = document.getElementById("guest-letter-content").value.trim();
+            if (!letter) return showToast("Write a missive first.", "error");
+            contentMessage = `📜 **Sealed Letter**\n• **From:** ${author}\n\n"${letter}"`;
+        }
+
+        if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1547449768383348776/zTpJYP8t1V4-ZRE49N-_5s-a6whwsOBD6WmOxQYnmhdrD_DlkiDNIy3NIzBb5iHk9M3h")) {
+            showToast("Missive recorded locally (Webhook URL omitted).", "info");
+            guestModal?.classList.add("hidden");
+            return;
+        }
+
+        try {
+            await fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: DEFAULT_BOT_NAME || "Guild Scribe", content: contentMessage })
+            });
+            showToast("Missive delivered successfully!", "success");
+            guestModal?.classList.add("hidden");
+        } catch (err) {
+            showToast("Error delivering missive: " + err.message, "error");
+        }
+    });
+
+    // 5. Price Logger Submit Event
+    document.getElementById("direct-price-form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const ingredientId = document.getElementById("price-ingredient-select").value;
+        const locationId = document.getElementById("price-location-select").value;
+        const price = parseFloat(document.getElementById("price-amount").value);
+
+        set(ref(db, `prices/${ingredientId}_${locationId}`), {
+            ingredientId, locationId, price, updatedAt: new Date().toISOString()
+        }).then(() => {
+            showToast("Price recorded!", "success");
+            e.target.reset();
+        }).catch(err => showToast("Save failed: " + err.message, "error"));
+    });
+
+    // 6. Batch Simulator Queue Submit Event
+    document.getElementById("batch-add-form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const recipeId = document.getElementById("simulator-recipe-select").value;
+        const count = parseInt(document.getElementById("simulator-qty").value) || 1;
+        
+        if (!recipeId) return;
+
+        const existing = state.currentBatch.find(item => item.recipeId === recipeId);
+        if (existing) {
+            existing.count += count;
+        } else {
+            state.currentBatch.push({ recipeId, count });
+        }
+        renderBatchQueue();
+        runOptimization();
+    });
+
+    // 7. Catalog Search Events
+    document.getElementById("catalog-search")?.addEventListener("input", renderCatalog);
+    document.getElementById("catalog-location-filter")?.addEventListener("change", renderCatalog);
+
+    // 8. Database Subscriptions
+    onValue(ref(db, 'locations'), (snapshot) => {
+        state.cachedLocations = snapshot.val() || {};
+        populateDropdowns();
+        renderCatalog();
+        runOptimization();
+    });
+
+    onValue(ref(db, 'ingredients'), (snapshot) => {
+        state.cachedIngredients = snapshot.val() || {};
+        populateDropdowns();
+        renderCatalog();
+        runOptimization();
+    });
+
+    onValue(ref(db, 'recipes'), (snapshot) => {
+        state.cachedRecipes = snapshot.val() || {};
+        populateDropdowns();
+        runOptimization();
+    });
+
+    onValue(ref(db, 'prices'), (snapshot) => {
+        state.cachedPrices = snapshot.val() || {};
+        renderCatalog();
+        runOptimization();
+    });
+}
+
+// Execute on DOM Ready
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+} else {
+    initApp();
+}

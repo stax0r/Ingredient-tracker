@@ -3,6 +3,10 @@ name: Deploy Web Application
 on:
   push:
     branches: [ "main", "Clean-up-+-standard-+-secrets" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-and-deploy:
@@ -14,10 +18,10 @@ jobs:
       - name: Inject Environment Variables and Secrets
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          DEFAULT_BOT_NAME: ${{ vars.DEFAULT_BOT_NAME }}
         run: |
-          sed -i "s|DISCORD_WEBHOOK_PLACEHOLDER|${DISCORD_WEBHOOK_URL}|g" js/app.js
-          sed -i "s|DEFAULT_BOT_NAME_PLACEHOLDER|${DEFAULT_BOT_NAME}|g" js/app.js
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            sed -i "s|DISCORD_WEBHOOK_PLACEHOLDER|${DISCORD_WEBHOOK_URL}|g" js/app.js
+          fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

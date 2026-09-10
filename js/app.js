@@ -4,7 +4,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
 
 // Global Variables Injected by GitHub Actions Workflow
 const DISCORD_WEBHOOK_URL = "DISCORD_WEBHOOK_PLACEHOLDER";
-const DEFAULT_BOT_NAME = "DEFAULT_BOT_NAME_PLACEHOLDER";
+const DEFAULT_BOT_NAME = "New Letter";;
 
 const firebaseConfig = {
     apiKey: "AIzaSyDTQPUXzYr8UAawpvNce6wbXJC07-ZOmeo",

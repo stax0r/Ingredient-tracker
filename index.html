@@ -2,15 +2,22 @@
 <html lang="en">
 <head>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Material Index</title>
 
-    <!-- Tailwind CSS Script for standalone/browser usage -->
-    <script src="https://cdn.tailwindcss.com"></script>
+<div class="flex items-center gap-4">
+    <div id="admin-toggles" class="hidden flex items-center gap-2 border-r border-red-950 pr-4">
+        <button onclick="openAdminModal('locations')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📍 Locations</button>
+        <button onclick="openAdminModal('ingredients')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">🌿 Ingredients</button>
+        <button onclick="openAdminModal('recipes')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📜 Potions</button>
+    </div>
 
-    <!-- Custom Scrollbar & Overrides Stylesheet -->
-    <link rel="stylesheet" href="css/styles.css">
+    <button id="guest-contrib-btn" onclick="openGuestModal()" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition">
+        Leave a missive with the latest valuation.
+    </button>
+
+    <div id="auth-container" class="flex items-center gap-3">
+        <!-- rest of auth container -->
+    </div>
+</div>
 </head>
 <body class="bg-zinc-950 text-red-50 min-h-screen font-sans selection:bg-red-900 selection:text-white flex flex-col justify-between">
 

@@ -3,1043 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Material Index - </title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>The Material Index</title>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="bg-zinc-950 text-red-50 min-h-screen font-sans selection:bg-red-900 selection:text-white flex flex-col justify-between">
 
     <div>
-        <!-- Navbar -->
+        <!-- Header -->
         <header class="bg-zinc-900 border-b border-red-950 p-4 flex flex-col md:flex-row justify-between items-center gap-3 shadow-lg">
             <div class="flex flex-col items-start">
-                <h1 class="text-2xl font-bold tracking-wider text-red-500 flex items-center gap-2">
-                    The Material Index
-                </h1>
+                <h1 class="text-2xl font-bold tracking-wider text-red-500 flex items-center gap-2">The Material Index</h1>
                 <span class="text-[10px] text-red-400/80 italic mt-0.5">Crafted by Silas Montclair</span>
             </div>
             
             <div class="flex items-center gap-4">
-                <!-- Admin Control Toggles (Visible only when logged in) -->
                 <div id="admin-toggles" class="hidden flex items-center gap-2 border-r border-red-950 pr-4">
-                    <button onclick="openAdminModal('locations')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">📍 Locations</button>
-                    <button onclick="openAdminModal('ingredients')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">🌿 Ingredients</button>
-                    <button onclick="openAdminModal('recipes')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition flex items-center gap-1.5">📜 Potions</button>
+                    <button onclick="openAdminModal('locations')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📍 Locations</button>
+                    <button onclick="openAdminModal('ingredients')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">🌿 Ingredients</button>
+                    <button onclick="openAdminModal('recipes')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📜 Potions</button>
                 </div>
 
-                <!-- Guest Contribution Button (Visible only when logged out) -->
-                <button id="guest-contrib-btn" onclick="openGuestModal()" class="hidden bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition flex items-center gap-1.5">
+                <button id="guest-contrib-btn" onclick="openGuestModal()" class="hidden bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition">
                     Leave a missive with the latest valuation.
                 </button>
 
-                <!-- Auth View -->
                 <div id="auth-container" class="flex items-center gap-3">
                     <div id="logged-out-view" class="flex items-center gap-2">
-                        <input type="email" id="auth-email" placeholder="Email" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                        <input type="password" id="auth-password" placeholder="Password" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                        <button onclick="handleLogin()" class="bg-red-900 hover:bg-red-800 text-white border border-red-700 px-3 py-1 rounded text-xs font-semibold transition">Sign In</button>
+                        <input type="email" id="auth-email" placeholder="Email" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100">
+                        <input type="password" id="auth-password" placeholder="Password" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100">
+                        <button onclick="handleLogin()" class="bg-red-900 hover:bg-red-800 text-white border border-red-700 px-3 py-1 rounded text-xs font-semibold">Sign In</button>
                     </div>
                     <div id="logged-in-view" class="hidden flex items-center gap-3">
                         <span id="user-display" class="text-xs text-red-300"></span>
-                        <button onclick="handleSignOut()" class="bg-zinc-900 hover:bg-zinc-800 border border-red-950 px-3 py-1 rounded text-xs font-semibold text-red-300 transition">Sign Out</button>
+                        <button onclick="handleSignOut()" class="bg-zinc-900 hover:bg-zinc-800 border border-red-950 px-3 py-1 rounded text-xs font-semibold text-red-300">Sign Out</button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Main Container -->
+        <!-- Main Content -->
         <main class="max-w-7xl mx-auto p-6 space-y-6">
-
-            <!-- Top Section: Quick Price Logger (Visible ONLY to Admins/Logged-in users) -->
             <section id="price-logger-section" class="hidden bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-red-950 pb-3">
-                    <div>
-                        <h2 class="text-lg font-semibold text-red-100">Record Ingredient Price</h2>
-                        <p class="text-xs text-red-400">Log or update live market pricing across discovered realms.</p>
-                    </div>
-                </div>
-
-                <!-- Direct Price Logger Form -->
+                <h2 class="text-lg font-semibold text-red-100">Record Ingredient Price</h2>
                 <form id="direct-price-form" onsubmit="handlePriceSubmit(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase font-bold text-red-400">Ingredient</label>
-                        <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                            <option value="">Select Ingredient...</option>
-                        </select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase font-bold text-red-400">Location</label>
-                        <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                            <option value="">Select Location...</option>
-                        </select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase font-bold text-red-400">Last seen price (Gold)</label>
-                        <input type="number" step="0.01" id="price-amount" placeholder="0.00" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                    </div>
-                    <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white transition">Record Price</button>
+                    <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"><option value="">Select Ingredient...</option></select>
+                    <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"><option value="">Select Location...</option></select>
+                    <input type="number" step="0.01" id="price-amount" placeholder="0.00" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white">Record Price</button>
                 </form>
             </section>
 
-            <!-- Primary Feature: Ingredient Price Catalog & Search (Enlarged) -->
             <section class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-red-950 pb-4">
                     <div>
                         <h2 class="text-xl font-bold text-red-100">Ingredient Price Catalog</h2>
-                        <p class="text-xs text-red-400">Comprehensive real-time market indices across Skyrim</p>
+                        <p class="text-xs text-red-400">Comprehensive real-time market indices</p>
                     </div>
-                    
                     <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                        <select id="catalog-location-filter" onchange="renderCatalog()" class="w-full sm:w-56 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
-                            <option value="">Filter by Location (All)</option>
-                        </select>
-                        <input type="text" id="catalog-search" oninput="renderCatalog()" placeholder="Search ingredient catalog..." class="w-full sm:w-64 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
+                        <select id="catalog-location-filter" class="w-full sm:w-56 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100"><option value="">Filter by Location (All)</option></select>
+                        <input type="text" id="catalog-search" placeholder="Search catalog..." class="w-full sm:w-64 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100">
                     </div>
                 </div>
-                
-                <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[48rem] overflow-y-auto pr-1">
-                    <p class="text-sm text-red-400 italic">No ingredients found.</p>
-                </div>
+                <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[48rem] overflow-y-auto pr-1"></div>
             </section>
 
-            <!-- Secondary Section: Batch Simulator & Pricing Breakdown -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                <!-- Simulator Controls -->
                 <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
                     <h2 class="text-lg font-semibold text-red-100">Batch Brewing</h2>
-                    
                     <div class="flex gap-3">
-                        <select id="simulator-recipe-select" class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-red-200 focus:outline-none focus:border-red-600">
-                            <option value="">Select a Potion Recipe...</option>
-                        </select>
-                        <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-center text-red-200 focus:outline-none focus:border-red-600">
-                        <button onclick="addRecipeToBatch()" class="bg-red-900 hover:bg-red-800 border border-red-700 px-4 py-2 rounded text-sm font-semibold transition text-white">Add</button>
+                        <select id="simulator-recipe-select" class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-red-200"><option value="">Select a Potion Recipe...</option></select>
+                        <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-center text-red-200">
+                        <button onclick="addRecipeToBatch()" class="bg-red-900 hover:bg-red-800 border border-red-700 px-4 py-2 rounded text-sm font-semibold text-white">Add</button>
                     </div>
-
-                    <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-red-400 mb-2">Current Batch Queue</h3>
-                        <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto">
-                            <p class="text-sm text-red-400 italic">No potions added to batch yet.</p>
-                        </div>
-                    </div>
+                    <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto"></div>
                 </div>
 
-                <!-- Detailed Price Breakdown Matrix -->
                 <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
                     <div class="flex justify-between items-center">
-                        <h3 class="text-md font-semibold text-red-100">Batch Ingredient Sourcing Breakdown</h3>
+                        <h3 class="text-md font-semibold text-red-100">Batch Sourcing Breakdown</h3>
                         <span id="total-batch-cost" class="text-red-400 font-bold text-lg">Total Optimal: 0 Gold</span>
                     </div>
-                    <div id="detailed-breakdown-container" class="space-y-3 max-h-48 overflow-y-auto pr-1">
-                        <p class="text-sm text-red-400 italic">Add items to batch to view pricing breakdowns.</p>
-                    </div>
+                    <div id="detailed-breakdown-container" class="space-y-3 max-h-48 overflow-y-auto pr-1"></div>
                 </div>
-
             </div>
-
         </main>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-zinc-900 border-t border-red-950 py-3 px-4 mt-8 relative">
-        <div class="max-w-7xl mx-auto flex flex-col items-center justify-center space-y-2 text-center">
-            <!-- Guild Identification Container -->
-            <div class="flex flex-col items-center justify-center space-y-0.5">
-                <span class="text-[11px] font-semibold uppercase tracking-widest text-red-400/90">Solitude Alchemist Guild</span>
-                <span class="text-[9px] text-red-500/60 italic">Restricted Ledger — For Guild Members Only</span>
-            </div>
-
-            <div class="text-[11px] text-red-400 pt-1 border-t border-red-950/60 max-w-xl mx-auto">
-                OOC: Whether you have questions, feedback, or just need to get in touch, please feel free to drop me a message on Discord at <code class="bg-zinc-950 border border-red-950 text-red-300 px-1 py-0.2 rounded font-mono text-[10px]">stax0r</code>. Always happy to help!
-            </div>
-        </div>
-
-        <!-- Hidden-in-plain-sight Discord Tag on Bottom Right Corner -->
-        <div class="absolute bottom-1 right-2 text-[9px] font-mono text-zinc-700/60 hover:text-red-400/35 transition select-all">
-            stax0r
-        </div>
-    </footer>
-
-    <!-- Toast Notification Container -->
+    <!-- Modals & Toasts -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- Generic Admin Modal -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-black/80 flex justify-center items-center p-4 z-50">
         <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 max-w-xl w-full space-y-4 shadow-2xl relative">
             <div class="flex justify-between items-center border-b border-red-950 pb-3">
                 <h2 id="admin-modal-title" class="text-lg font-bold text-red-100">Admin Management</h2>
                 <button onclick="closeAdminModal()" class="text-red-400 hover:text-white font-bold text-sm">✕</button>
             </div>
-            
-            <div id="admin-modal-content" class="max-h-96 overflow-y-auto pr-1 space-y-4">
-                <!-- Dynamically injected admin forms & lists -->
-            </div>
+            <div id="admin-modal-content" class="max-h-96 overflow-y-auto pr-1 space-y-4"></div>
         </div>
     </div>
 
-    <!-- Guest Scribe / Contribution Request Modal -->
     <div id="guest-modal" class="hidden fixed inset-0 bg-black/80 flex justify-center items-center p-4 z-50">
         <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-red-950 pb-2">
-                <h2 class="text-lg font-bold text-red-100">Dispatch Message to Guild Scribes</h2>
+                <h2 class="text-lg font-bold text-red-100">Dispatch Missive</h2>
                 <button onclick="closeGuestModal()" class="text-red-400 hover:text-white font-bold text-sm">✕</button>
             </div>
-            
-            <!-- In-character Warning Box -->
-            <div class="bg-red-950/40 border border-red-900/60 rounded p-2.5 text-[11px] text-red-300 leading-relaxed">
-                ⚠️ <strong class="text-red-200">Guild Notice:</strong> You can only leave a note if you're at the guild-headquarters.
-            </div>
-
-            <p class="text-xs text-red-300">Submit new locations, and price updates.</p>
-            
             <div class="space-y-3">
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-bold text-red-400">Contribution Type</label>
-                    <select id="guest-contrib-type" onchange="toggleGuestFormFields()" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                        <option value="price">Price update</option>
-                        <option value="location">New Location Suggestion</option>
-                        <option value="letter">A letter</option>
-                    </select>
+                <select id="guest-contrib-type" onchange="toggleGuestFormFields()" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <option value="price">Price update</option>
+                    <option value="location">New Location Suggestion</option>
+                    <option value="letter">A letter</option>
+                </select>
+                <div id="guest-price-fields" class="space-y-2">
+                    <select id="guest-ingredient-select" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></select>
+                    <select id="guest-location-select" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></select>
+                    <input type="number" step="0.01" id="guest-price-amount" placeholder="Price" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
                 </div>
-
-                <!-- Fields for Price Update -->
-                <div id="guest-price-fields" class="space-y-3">
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase font-bold text-red-400">Ingredient</label>
-                        <select id="guest-ingredient-select" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase font-bold text-red-400">Location</label>
-                        <select id="guest-location-select" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase font-bold text-red-400">Last seen price (Gold)</label>
-                        <input type="number" step="0.01" id="guest-price-amount" placeholder="0.00" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                    </div>
+                <div id="guest-location-fields" class="space-y-2 hidden">
+                    <input type="text" id="guest-loc-hold" placeholder="Hold / Region" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <input type="text" id="guest-loc-town" placeholder="Town / Settlement" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
                 </div>
-
-                <!-- Fields for Location Suggestion -->
-                <div id="guest-location-fields" class="space-y-3 hidden">
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase font-bold text-red-400">Hold / Region</label>
-                        <input type="text" id="guest-loc-hold" placeholder="e.g. Whiterun Hold" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase font-bold text-red-400">Town / Settlement</label>
-                        <input type="text" id="guest-loc-town" placeholder="e.g. Riverwood" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                    </div>
+                <div id="guest-letter-fields" class="space-y-2 hidden">
+                    <textarea id="guest-letter-content" rows="4" placeholder="Write your letter here..." class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></textarea>
                 </div>
-
-                <!-- Fields for "A letter" -->
-                <div id="guest-letter-fields" class="space-y-3 hidden">
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase font-bold text-red-400">Your Missive / Note</label>
-                        <textarea id="guest-letter-content" rows="4" placeholder="Write your letter here..." class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600"></textarea>
-                    </div>
-                </div>
-
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-bold text-red-400">Your Name</label>
-                    <input type="text" id="guest-author" placeholder="e.g. Loic Sauvage" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                </div>
-
-                <button onclick="submitGuestWebhookRequest()" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white transition">Seal and Dispatch Note</button>
+                <input type="text" id="guest-author" placeholder="Your Name" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                <button onclick="submitGuestWebhookRequest()" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white">Send Note</button>
             </div>
         </div>
     </div>
 
-    <!-- Edit Potion Modal -->
-    <div id="edit-recipe-modal" class="hidden fixed inset-0 bg-black/80 flex justify-center items-center p-4 z-50">
-        <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-            <h2 class="text-lg font-bold text-red-100">Edit Potion Recipe</h2>
-            <input type="hidden" id="edit-recipe-id">
-            <div class="space-y-1">
-                <label class="text-xs text-red-400 uppercase font-bold">Potion Name</label>
-                <input type="text" id="edit-recipe-name" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100 focus:outline-none focus:border-red-600">
-            </div>
-            <div class="space-y-1">
-                <label class="text-xs text-red-400 uppercase font-bold">Ingredients</label>
-                <div id="edit-recipe-ingredients-container" class="space-y-1 bg-zinc-950 p-2 rounded border border-red-950 max-h-36 overflow-y-auto"></div>
-                <button type="button" onclick="addIngredientRowToRecipeForm('edit-recipe-ingredients-container')" class="text-xs text-red-400 hover:underline mt-1">+ Add Ingredient Requirement</button>
-            </div>
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeEditRecipeModal()" class="bg-zinc-800 hover:bg-zinc-700 border border-red-950 px-3 py-1.5 rounded text-xs font-semibold text-red-200">Cancel</button>
-                <button onclick="saveEditedRecipe()" class="bg-red-900 hover:bg-red-800 border border-red-700 px-3 py-1.5 rounded text-xs font-semibold text-white">Save Changes</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Application Script -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, push, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        const firebaseConfig = {
-  apiKey: "AIzaSyDTQPUXzYr8UAawpvNce6wbXJC07-ZOmeo",
-  authDomain: "alchemy-price-tracker.firebaseapp.com",
-  databaseURL: "https://alchemy-price-tracker-default-rtdb.firebaseio.com",
-  projectId: "alchemy-price-tracker",
-  storageBucket: "alchemy-price-tracker.firebasestorage.app",
-  messagingSenderId: "357962236614",
-  appId: "1:357962236614:web:770c78966226a35f138dc7",
-  measurementId: "G-J94V9BMR1Q"
-        };
-
-        // WEBHOOK URL
-        const DISCORD_WEBHOOK_URL = "DISCORD_WEBHOOK";
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        let cachedRecipes = {};
-        let cachedIngredients = {};
-        let cachedLocations = {};
-        let cachedPrices = {};
-        let currentBatch = [];
-        let activeAdminTab = 'locations';
-
-        // Toast Notification System
-        window.showToast = (message, type = 'success') => {
-            const container = document.getElementById("toast-container");
-            const toast = document.createElement("div");
-            
-            const bgColors = {
-                success: "bg-zinc-900 border-red-800 text-red-100",
-                error: "bg-red-950 border-red-700 text-red-100",
-                info: "bg-zinc-900 border-zinc-700 text-zinc-100"
-            };
-
-            toast.className = `pointer-events-auto px-4 py-3 rounded-lg border shadow-xl text-xs flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 ${bgColors[type] || bgColors.success}`;
-            toast.innerHTML = `<span>${message}</span>`;
-            
-            container.appendChild(toast);
-            
-            // Trigger animation
-            setTimeout(() => {
-                toast.classList.remove("translate-y-2", "opacity-0");
-            }, 10);
-
-            // Auto-dismiss after 3.5 seconds
-            setTimeout(() => {
-                toast.classList.add("translate-y-2", "opacity-0");
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        };
-
-        window.handleLogin = async () => {
-            const email = document.getElementById("auth-email").value;
-            const password = document.getElementById("auth-password").value;
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                showToast("Successfully signed in!", "success");
-            } catch (err) {
-                showToast("Login error: " + err.message, "error");
-            }
-        };
-
-        window.handleSignOut = () => {
-            signOut(auth);
-            showToast("Signed out successfully.", "info");
-        };
-
-        onAuthStateChanged(auth, (user) => {
-            const outView = document.getElementById("logged-out-view");
-            const inView = document.getElementById("logged-in-view");
-            const adminToggles = document.getElementById("admin-toggles");
-            const guestContribBtn = document.getElementById("guest-contrib-btn");
-            const priceLoggerSection = document.getElementById("price-logger-section");
-
-            if (user) {
-                outView.classList.add("hidden");
-                inView.classList.remove("hidden");
-                document.getElementById("user-display").textContent = user.email;
-                adminToggles.classList.remove("hidden");
-                guestContribBtn.classList.add("hidden");
-                priceLoggerSection.classList.remove("hidden");
-            } else {
-                outView.classList.remove("hidden");
-                inView.classList.add("hidden");
-                adminToggles.classList.add("hidden");
-                guestContribBtn.classList.remove("hidden");
-                priceLoggerSection.classList.add("hidden");
-                closeAdminModal();
-            }
-        });
-
-        // Real-time Database Listeners
-        onValue(ref(db, 'locations'), (snapshot) => {
-            cachedLocations = snapshot.val() || {};
-            
-            const locSelects = [
-                document.getElementById("price-location-select"),
-                document.getElementById("guest-location-select"),
-                document.getElementById("catalog-location-filter")
-            ];
-            
-            locSelects.forEach((sel, index) => {
-                if (sel) {
-                    const currentVal = sel.value;
-                    sel.innerHTML = index === 2 ? '<option value="">Filter by Location (All)</option>' : '<option value="">Select Location...</option>';
-                    
-                    const sortedLocations = Object.entries(cachedLocations).sort((a, b) => {
-                        const textA = `${a[1].hold} / ${a[1].town}`.toLowerCase();
-                        const textB = `${b[1].hold} / ${b[1].town}`.toLowerCase();
-                        return textA.localeCompare(textB);
-                    });
-                    for (const [id, loc] of sortedLocations) {
-                        sel.innerHTML += `<option value="${id}">${loc.hold} / ${loc.town}</option>`;
-                    }
-                    sel.value = currentVal;
-                }
-            });
-
-            if (document.getElementById("admin-modal").classList.contains("flex") && activeAdminTab === 'locations') {
-                renderAdminModalContent('locations');
-            }
-            renderCatalog();
-            runOptimization();
-        });
-
-        onValue(ref(db, 'ingredients'), (snapshot) => {
-            cachedIngredients = snapshot.val() || {};
-            
-            const ingSelects = [
-                document.getElementById("price-ingredient-select"),
-                document.getElementById("guest-ingredient-select")
-            ];
-
-            ingSelects.forEach(sel => {
-                if (sel) {
-                    sel.innerHTML = '<option value="">Select Ingredient...</option>';
-                    const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => 
-                        a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
-                    );
-                    for (const [id, ing] of sortedIngredients) {
-                        sel.innerHTML += `<option value="${id}">${ing.name}</option>`;
-                    }
-                }
-            });
-
-            if (document.getElementById("admin-modal").classList.contains("flex") && activeAdminTab === 'ingredients') {
-                renderAdminModalContent('ingredients');
-            }
-            renderCatalog();
-            runOptimization();
-        });
-
-        onValue(ref(db, 'recipes'), (snapshot) => {
-            cachedRecipes = snapshot.val() || {};
-            const recipeSelect = document.getElementById("simulator-recipe-select");
-            if (recipeSelect) recipeSelect.innerHTML = '<option value="">Select a Potion Recipe...</option>';
-            
-            const sortedRecipes = Object.entries(cachedRecipes).sort((a, b) => 
-                a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
-            );
-
-            for (const [id, rec] of sortedRecipes) {
-                if (recipeSelect) recipeSelect.innerHTML += `<option value="${id}">${rec.name}</option>`;
-            }
-            if (document.getElementById("admin-modal").classList.contains("flex") && activeAdminTab === 'recipes') {
-                renderAdminModalContent('recipes');
-            }
-            renderBatchQueue();
-            runOptimization();
-        });
-
-        onValue(ref(db, 'prices'), (snapshot) => {
-            cachedPrices = snapshot.val() || {};
-            renderCatalog();
-            runOptimization();
-        });
-
-        // Admin Modal Controls
-        window.openAdminModal = (tab) => {
-            activeAdminTab = tab;
-            const titles = {
-                locations: "📍 Manage Locations",
-                ingredients: "🌿 Manage Ingredients Catalog",
-                recipes: "📜 Manage Potion Recipes"
-            };
-            document.getElementById("admin-modal-title").textContent = titles[tab];
-            renderAdminModalContent(tab);
-            document.getElementById("admin-modal").classList.remove("hidden");
-            document.getElementById("admin-modal").classList.add("flex");
-        };
-
-        window.closeAdminModal = () => {
-            document.getElementById("admin-modal").classList.remove("flex");
-            document.getElementById("admin-modal").classList.add("hidden");
-        };
-
-        // Guest Modal Controls
-        window.openGuestModal = () => {
-            document.getElementById("guest-modal").classList.remove("hidden");
-            document.getElementById("guest-modal").classList.add("flex");
-        };
-
-        window.closeGuestModal = () => {
-            document.getElementById("guest-modal").classList.remove("flex");
-            document.getElementById("guest-modal").classList.add("hidden");
-        };
-
-        window.toggleGuestFormFields = () => {
-            const type = document.getElementById("guest-contrib-type").value;
-            const priceFields = document.getElementById("guest-price-fields");
-            const locFields = document.getElementById("guest-location-fields");
-            const letterFields = document.getElementById("guest-letter-fields");
-
-            priceFields.classList.add("hidden");
-            locFields.classList.add("hidden");
-            letterFields.classList.add("hidden");
-
-            if (type === 'price') {
-                priceFields.classList.remove("hidden");
-            } else if (type === 'location') {
-                locFields.classList.remove("hidden");
-            } else if (type === 'letter') {
-                letterFields.classList.remove("hidden");
-            }
-        };
-
-        // Scribe Dispatch integration
-        window.submitGuestWebhookRequest = async () => {
-            const type = document.getElementById("guest-contrib-type").value;
-            const author = document.getElementById("guest-author").value.trim() || "A Guild Member";
-            
-            let contentMessage = "";
-
-            if (type === 'price') {
-                const ingSelect = document.getElementById("guest-ingredient-select");
-                const locSelect = document.getElementById("guest-location-select");
-                const priceVal = document.getElementById("guest-price-amount").value;
-
-                const ingredientName = ingSelect.options[ingSelect.selectedIndex]?.text || "Unknown";
-                const locationName = locSelect.options[locSelect.selectedIndex]?.text || "Unknown";
-
-                if (!ingSelect.value || !locSelect.value || !priceVal) {
-                    return showToast("Please fill out all price update fields.", "error");
-                }
-
-                contentMessage = `💰 **Price Update**\n• **Submitted By:** ${author}\n• **Ingredient:** ${ingredientName}\n• **Location:** ${locationName}\n• **Last Seen Price:** ${priceVal} Gold`;
-            } else if (type === 'location') {
-                const hold = document.getElementById("guest-loc-hold").value.trim();
-                const town = document.getElementById("guest-loc-town").value.trim();
-
-                if (!hold || !town) {
-                    return showToast("Please fill out both hold and town fields.", "error");
-                }
-
-                contentMessage = `📍 **New Location Discovery Request**\n• **Submitted By:** ${author}\n• **Hold / Region:** ${hold}\n• **Town / Settlement:** ${town}`;
-            } else {
-                const letterText = document.getElementById("guest-letter-content").value.trim();
-                if (!letterText) {
-                    return showToast("Please write your letter before sealing it.", "error");
-                }
-
-                contentMessage = `📜 **A Sealed Letter**\n• **From:** ${author}\n\n"${letterText}"`;
-            }
-
-            if (DISCORD_WEBHOOK_URL.includes("YOUR_DISCORD_WEBHOOK_URL_HERE")) {
-                showToast("Your missive has been placed on the desk for review!", "success");
-                closeGuestModal();
-                return;
-            }
-
-            try {
-                const response = await fetch(DISCORD_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content: contentMessage })
-                });
-
-                if (response.ok || response.type === 'opaque') {
-                    showToast("Your missive has been placed on the desk for review!", "success");
-                    closeGuestModal();
-                } else {
-                    const randomErrorMessages = [
-                        "The wind blew your letter away! Error code: 404_WIND",
-                        "Your letter got ruined by water! Error code: 500_SOAK",
-                        "A stray dragon singed your missive to ashes! Error code: 502_FIRE",
-                        "The courier tripped over a mudcrab! Error code: 503_CRAB"
-                    ];
-                    const randomError = randomErrorMessages[Math.floor(Math.random() * randomErrorMessages.length)];
-                    showToast(randomError, "error");
-                }
-            } catch (err) {
-                console.error(err);
-                const randomErrorMessages = [
-                    "The wind blew your letter away! Error code: 404_WIND",
-                    "Your letter got ruined by water! Error code: 500_SOAK",
-                    "A stray dragon singed your missive to ashes! Error code: 502_FIRE",
-                    "The courier tripped over a mudcrab! Error code: 503_CRAB"
-                ];
-                const randomError = randomErrorMessages[Math.floor(Math.random() * randomErrorMessages.length)];
-                showToast(randomError, "error");
-            }
-        };
-
-        function renderAdminModalContent(tab) {
-            const container = document.getElementById("admin-modal-content");
-            if (tab === 'locations') {
-                const sortedLocations = Object.entries(cachedLocations).sort((a, b) => {
-                    const textA = `${a[1].hold} / ${a[1].town}`.toLowerCase();
-                    const textB = `${b[1].hold} / ${b[1].town}`.toLowerCase();
-                    return textA.localeCompare(textB);
-                });
-
-                let listHtml = sortedLocations.map(([id, loc]) => `
-                    <div class="flex gap-2 items-center bg-zinc-950 p-2 rounded border border-red-950">
-                        <input type="text" id="edit-loc-hold-${id}" value="${loc.hold}" class="w-1/2 bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-white">
-                        <input type="text" id="edit-loc-town-${id}" value="${loc.town}" class="w-1/2 bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-white">
-                        <button onclick="updateLocation('${id}')" class="bg-red-900 hover:bg-red-800 border border-red-700 px-2 py-1 rounded text-xs font-semibold text-white">Save</button>
-                        <button onclick="deleteLocation('${id}')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-950 text-red-300 px-2 py-1 rounded text-xs">✕</button>
-                    </div>
-                `).join("");
-
-                container.innerHTML = `
-                    <form id="location-form" onsubmit="handleLocationSubmit(event)" class="space-y-2 pb-4 border-b border-red-950">
-                        <input type="text" id="loc-hold" placeholder="Hold / Region" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                        <input type="text" id="loc-town" placeholder="City / Town" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                        <button type="submit" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 py-1.5 rounded text-xs font-semibold text-white">Add Location</button>
-                    </form>
-                    <div class="space-y-2 max-h-60 overflow-y-auto pr-1">${listHtml || '<p class="text-xs text-red-400 italic">No locations found.</p>'}</div>
-                `;
-            } else if (tab === 'ingredients') {
-                const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => 
-                    a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
-                );
-
-                let listHtml = sortedIngredients.map(([id, ing]) => `
-                    <div class="flex gap-2 items-center bg-zinc-950 p-2 rounded border border-red-950">
-                        <input type="text" id="edit-ing-${id}" value="${ing.name}" class="flex-1 bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-white">
-                        <button onclick="updateIngredientName('${id}')" class="bg-red-900 hover:bg-red-800 border border-red-700 px-2 py-1 rounded text-xs font-semibold text-white">Save</button>
-                        <button onclick="deleteIngredient('${id}')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-950 text-red-300 px-2 py-1 rounded text-xs">✕</button>
-                    </div>
-                `).join("");
-
-                container.innerHTML = `
-                    <form id="ingredient-form" onsubmit="handleIngredientSubmit(event)" class="flex gap-2 pb-4 border-b border-red-950">
-                        <input type="text" id="ing-name" placeholder="New Ingredient Name" required class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                        <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 px-3 py-1.5 rounded text-xs font-semibold text-white">Add</button>
-                    </form>
-                    <div class="space-y-2 max-h-60 overflow-y-auto pr-1">${listHtml || '<p class="text-xs text-red-400 italic">No ingredients found.</p>'}</div>
-                `;
-            } else if (tab === 'recipes') {
-                const sortedRecipes = Object.entries(cachedRecipes).sort((a, b) => 
-                    a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
-                );
-
-                let listHtml = sortedRecipes.map(([id, rec]) => `
-                    <div class="flex justify-between items-center bg-zinc-950 p-2 rounded border border-red-950 text-xs">
-                        <span class="font-medium text-red-100">${rec.name}</span>
-                        <div class="flex gap-1">
-                            <button onclick="openEditRecipeModal('${id}')" class="bg-red-900 hover:bg-red-800 border border-red-700 px-2 py-1 rounded text-xs font-semibold text-white">Edit</button>
-                            <button onclick="deleteRecipe('${id}')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-950 text-red-300 px-2 py-1 rounded text-xs">✕</button>
-                        </div>
-                    </div>
-                `).join("");
-
-                container.innerHTML = `
-                    <form id="recipe-form" onsubmit="handleRecipeSubmit(event)" class="space-y-2 pb-4 border-b border-red-950">
-                        <input type="text" id="recipe-name" placeholder="Potion Name" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                        <div id="recipe-ingredients-container" class="space-y-1 bg-zinc-950 p-2 rounded border border-red-950 max-h-28 overflow-y-auto">
-                            <p class="text-xs text-red-400 italic">Add ingredients below</p>
-                        </div>
-                        <button type="button" onclick="addIngredientRowToRecipeForm('recipe-ingredients-container')" class="text-xs text-red-400 hover:underline">+ Add Ingredient Requirement</button>
-                        <button type="submit" class="w-full mt-2 bg-red-900 hover:bg-red-800 border border-red-700 py-1.5 rounded text-xs font-semibold text-white">Save Recipe</button>
-                    </form>
-                    <div class="space-y-2 max-h-48 overflow-y-auto pr-1">${listHtml || '<p class="text-xs text-red-400 italic">No recipes found.</p>'}</div>
-                `;
-            }
-        }
-
-        // Admin: Locations
-        window.handleLocationSubmit = (e) => {
-            e.preventDefault();
-            push(ref(db, 'locations'), {
-                hold: document.getElementById("loc-hold").value.trim(),
-                town: document.getElementById("loc-town").value.trim()
-            });
-            showToast("Location added successfully!", "success");
-            e.target.reset();
-        };
-
-        window.updateLocation = (id) => {
-            const hold = document.getElementById(`edit-loc-hold-${id}`).value.trim();
-            const town = document.getElementById(`edit-loc-town-${id}`).value.trim();
-            if (!hold || !town) return showToast("Fields cannot be empty.", "error");
-            update(ref(db, `locations/${id}`), { hold, town })
-                .then(() => showToast("Location updated!", "success"))
-                .catch(err => showToast("Error: " + err.message, "error"));
-        };
-
-        window.deleteLocation = (id) => {
-            if (confirm("Are you sure you want to delete this location?")) {
-                const updates = {};
-                updates[`locations/${id}`] = null;
-                for (const [pKey, pVal] of Object.entries(cachedPrices)) {
-                    if (pVal.locationId === id) {
-                        updates[`prices/${pKey}`] = null;
-                    }
-                }
-                update(ref(db), updates)
-                    .then(() => showToast("Location deleted.", "info"))
-                    .catch(err => showToast("Error deleting location: " + err.message, "error"));
-            }
-        };
-
-        // Admin: Ingredients
-        window.handleIngredientSubmit = (e) => {
-            e.preventDefault();
-            push(ref(db, 'ingredients'), {
-                name: document.getElementById("ing-name").value.trim()
-            });
-            showToast("Ingredient added successfully!", "success");
-            e.target.reset();
-        };
-
-        window.updateIngredientName = (id) => {
-            const newName = document.getElementById(`edit-ing-${id}`).value.trim();
-            if (!newName) return showToast("Name cannot be empty.", "error");
-            update(ref(db, `ingredients/${id}`), { name: newName })
-                .then(() => showToast("Ingredient updated!", "success"))
-                .catch(err => showToast("Error: " + err.message, "error"));
-        };
-
-        window.deleteIngredient = (id) => {
-            if (confirm("Are you sure you want to delete this ingredient? All older prices and dependent records will be cleaned up.")) {
-                const updates = {};
-                updates[`ingredients/${id}`] = null;
-                for (const [pKey, pVal] of Object.entries(cachedPrices)) {
-                    if (pVal.ingredientId === id) {
-                        updates[`prices/${pKey}`] = null;
-                    }
-                }
-                update(ref(db), updates)
-                    .then(() => showToast("Ingredient deleted.", "info"))
-                    .catch(err => showToast("Error deleting ingredient: " + err.message, "error"));
-            }
-        };
-
-        // Admin: Recipes
-        window.addIngredientRowToRecipeForm = (containerId, selectedIngId = "", qtyVal = "") => {
-            const container = document.getElementById(containerId);
-            if (container.querySelector("p")) {
-                container.innerHTML = "";
-            }
-            const rowId = "row-" + Math.random().toString(36).substring(2, 9);
-            
-            const sortedIngredients = Object.entries(cachedIngredients).sort((a, b) => 
-                a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase())
-            );
-
-            let options = '<option value="">Ingredient...</option>';
-            for (const [id, ing] of sortedIngredients) {
-                const selected = id === selectedIngId ? 'selected' : '';
-                options += `<option value="${id}" ${selected}>${ing.name}</option>`;
-            }
-            const div = document.createElement("div");
-            div.id = rowId;
-            div.className = "flex gap-2 items-center mt-1";
-            div.innerHTML = `
-                <select class="recipe-ing-select flex-1 bg-zinc-900 border border-red-950 rounded p-1 text-xs text-white" required>${options}</select>
-                <input type="number" step="0.1" value="${qtyVal}" placeholder="Qty" class="recipe-ing-qty w-16 bg-zinc-900 border border-red-950 rounded p-1 text-xs text-white" required>
-                <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-400 font-bold text-xs">X</button>
-            `;
-            container.appendChild(div);
-        };
-
-        window.handleRecipeSubmit = (e) => {
-            e.preventDefault();
-            const name = document.getElementById("recipe-name").value.trim();
-            const rows = document.querySelectorAll("#recipe-ingredients-container > div");
-            const ingredients = {};
-            rows.forEach(r => {
-                const id = r.querySelector(".recipe-ing-select").value;
-                const qty = parseFloat(r.querySelector(".recipe-ing-qty").value);
-                if (id && qty) ingredients[id] = qty;
-            });
-            if (Object.keys(ingredients).length === 0) return showToast("Add ingredients!", "error");
-            push(ref(db, 'recipes'), { name, ingredients });
-            showToast("Recipe saved successfully!", "success");
-            e.target.reset();
-            document.getElementById("recipe-ingredients-container").innerHTML = '<p class="text-xs text-red-400 italic">Add ingredients below</p>';
-        };
-
-        window.deleteRecipe = (id) => {
-            if (confirm("Are you sure you want to delete this potion recipe?")) {
-                remove(ref(db, `recipes/${id}`))
-                    .then(() => showToast("Recipe deleted.", "info"))
-                    .catch(err => showToast("Error deleting recipe: " + err.message, "error"));
-            }
-        };
-
-        window.openEditRecipeModal = (id) => {
-            const rec = cachedRecipes[id];
-            if (!rec) return;
-            document.getElementById("edit-recipe-id").value = id;
-            document.getElementById("edit-recipe-name").value = rec.name;
-            
-            const container = document.getElementById("edit-recipe-ingredients-container");
-            container.innerHTML = "";
-
-            if (rec.ingredients) {
-                for (const [ingId, qty] of Object.entries(rec.ingredients)) {
-                    addIngredientRowToRecipeForm("edit-recipe-ingredients-container", ingId, qty);
-                }
-            }
-
-            document.getElementById("edit-recipe-modal").classList.remove("hidden");
-        };
-
-        window.closeEditRecipeModal = () => {
-            document.getElementById("edit-recipe-modal").classList.add("hidden");
-        };
-
-        window.saveEditedRecipe = () => {
-            const id = document.getElementById("edit-recipe-id").value;
-            const name = document.getElementById("edit-recipe-name").value.trim();
-            const rows = document.querySelectorAll("#edit-recipe-ingredients-container > div");
-            const ingredients = {};
-            
-            rows.forEach(r => {
-                const ingId = r.querySelector(".recipe-ing-select").value;
-                const qty = parseFloat(r.querySelector(".recipe-ing-qty").value);
-                if (ingId && qty) ingredients[ingId] = qty;
-            });
-
-            if (!name) return showToast("Potion name cannot be empty.", "error");
-            if (Object.keys(ingredients).length === 0) return showToast("Add at least one ingredient!", "error");
-
-            update(ref(db, `recipes/${id}`), { name, ingredients })
-                .then(() => {
-                    showToast("Potion recipe updated successfully!", "success");
-                    closeEditRecipeModal();
-                })
-                .catch(err => showToast("Error updating recipe: " + err.message, "error"));
-        };
-
-        // Price logging
-        window.handlePriceSubmit = (e) => {
-            e.preventDefault();
-            const ingredientId = document.getElementById("price-ingredient-select").value;
-            const locationId = document.getElementById("price-location-select").value;
-            const price = parseFloat(document.getElementById("price-amount").value);
-            const updatedAt = new Date().toISOString();
-
-            const priceKey = `${ingredientId}_${locationId}`;
-            set(ref(db, `prices/${priceKey}`), {
-                ingredientId,
-                locationId,
-                price,
-                updatedAt
-            }).then(() => {
-                showToast("Price recorded and updated!", "success");
-                e.target.reset();
-            }).catch(err => showToast("Error saving price: " + err.message, "error"));
-        };
-
-        // Ingredient Catalog Search & Display with Location Filtering
-        window.renderCatalog = () => {
-            const query = (document.getElementById("catalog-search").value || "").toLowerCase();
-            const selectedLocFilter = document.getElementById("catalog-location-filter").value;
-            const container = document.getElementById("catalog-container");
-            
-            const filteredIngredients = Object.entries(cachedIngredients).filter(([id, ing]) => {
-                const matchesSearch = ing.name.toLowerCase().includes(query);
-                if (!matchesSearch) return false;
-
-                // If a location filter is active, check if this ingredient has a price entry for that location
-                if (selectedLocFilter) {
-                    let hasLocationPrice = false;
-                    for (const [key, p] of Object.entries(cachedPrices)) {
-                        if (p.ingredientId === id && p.locationId === selectedLocFilter) {
-                            hasLocationPrice = true;
-                            break;
-                        }
-                    }
-                    return hasLocationPrice;
-                }
-                return true;
-            }).sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
-
-            if (filteredIngredients.length === 0) {
-                container.innerHTML = '<p class="text-sm text-red-400 italic">No matching ingredients found.</p>';
-                return;
-            }
-
-            container.innerHTML = filteredIngredients.map(([ingId, ing]) => {
-                const offers = [];
-                for (const [key, p] of Object.entries(cachedPrices)) {
-                    if (p.ingredientId === ingId) {
-                        // If location filter is applied, only show offers for that location
-                        if (!selectedLocFilter || p.locationId === selectedLocFilter) {
-                            offers.push(p);
-                        }
-                    }
-                }
-                offers.sort((a, b) => a.price - b.price);
-
-                let offersHtml = "";
-                if (offers.length === 0) {
-                    offersHtml = '<p class="text-xs text-zinc-500 italic">No locations have priced this ingredient yet.</p>';
-                } else {
-                    offersHtml = offers.map((offer, idx) => {
-                        const loc = cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
-                        const isCheapest = idx === 0 && !selectedLocFilter;
-                        const rowStyle = isCheapest ? "bg-zinc-950 text-red-100 border border-red-900 font-medium" : "bg-zinc-900/50 text-red-400";
-                        
-                        let formattedDate = "Unknown";
-                        if (offer.updatedAt) {
-                            formattedDate = new Date(offer.updatedAt).toLocaleString([], { 
-                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-                            });
-                        }
-
-                        return `
-                            <div class="flex justify-between items-center p-1.5 rounded text-xs ${rowStyle}">
-                                <span>${loc.hold} / ${loc.town} ${isCheapest ? '⭐ <strong>(Cheapest)</strong>' : ''}</span>
-                                <span class="font-mono">${offer.price} Gold <span class="text-[10px] text-zinc-500">(${formattedDate})</span></span>
-                            </div>
-                        `;
-                    }).join("");
-                }
-
-                return `
-                    <div class="bg-zinc-950/60 border border-red-950 rounded-lg p-4 space-y-2 flex flex-col h-48">
-                        <h3 class="font-bold text-red-100 text-sm border-b border-red-950 pb-1 flex-shrink-0">${ing.name}</h3>
-                        <div class="space-y-1 overflow-y-auto pr-1 flex-1">
-                            ${offersHtml}
-                        </div>
-                    </div>
-                `;
-            }).join("");
-        };
-
-        // Batch Grouping Logic
-        window.addRecipeToBatch = () => {
-            const recipeId = document.getElementById("simulator-recipe-select").value;
-            const count = parseInt(document.getElementById("simulator-qty").value) || 1;
-            if (!recipeId) return;
-
-            const existing = currentBatch.find(item => item.recipeId === recipeId);
-            if (existing) {
-                existing.count += count;
-            } else {
-                currentBatch.push({ recipeId, count });
-            }
-            renderBatchQueue();
-            runOptimization();
-        };
-
-        window.removeBatchItem = (index) => {
-            currentBatch.splice(index, 1);
-            renderBatchQueue();
-            runOptimization();
-        };
-
-        function renderBatchQueue() {
-            const container = document.getElementById("batch-queue-list");
-            if (currentBatch.length === 0) {
-                container.innerHTML = '<p class="text-sm text-red-400 italic">No potions added to batch yet.</p>';
-                return;
-            }
-            container.innerHTML = currentBatch.map((item, idx) => {
-                const rec = cachedRecipes[item.recipeId] || { name: "Unknown" };
-                return `
-                    <div class="flex items-center gap-2 bg-zinc-950 border border-red-950 px-3 py-1.5 rounded-full text-xs text-red-200">
-                        <span>${rec.name} <strong>x${item.count}</strong></span>
-                        <button onclick="removeBatchItem(${idx})" class="text-red-400 hover:text-white font-bold ml-1">×</button>
-                    </div>
-                `;
-            }).join("");
-        }
-
-        // Optimization Engine
-        function runOptimization() {
-            const totalDemands = {};
-            currentBatch.forEach(item => {
-                const rec = cachedRecipes[item.recipeId];
-                if (!rec || !rec.ingredients) return;
-                for (const [ingId, qty] of Object.entries(rec.ingredients)) {
-                    totalDemands[ingId] = (totalDemands[ingId] || 0) + (qty * item.count);
-                }
-            });
-
-            const container = document.getElementById("detailed-breakdown-container");
-            const totalCostDisplay = document.getElementById("total-batch-cost");
-
-            if (Object.keys(totalDemands).length === 0) {
-                container.innerHTML = '<p class="text-sm text-red-400 italic">Add items to batch to view pricing breakdowns.</p>';
-                totalCostDisplay.textContent = "Total Optimal: 0 Gold";
-                return;
-            }
-
-            let overallOptimalTotal = 0;
-            let html = "";
-
-            const sortedDemands = Object.entries(totalDemands).sort((a, b) => {
-                const nameA = (cachedIngredients[a[0]]?.name || "").toLowerCase();
-                const nameB = (cachedIngredients[b[0]]?.name || "").toLowerCase();
-                return nameA.localeCompare(nameB);
-            });
-
-            for (const [ingId, neededQty] of sortedDemands) {
-                const ingMeta = cachedIngredients[ingId] || { name: "Unknown Ingredient" };
-                
-                const storeOffers = [];
-                for (const [key, p] of Object.entries(cachedPrices)) {
-                    if (p.ingredientId === ingId) storeOffers.push(p);
-                }
-                storeOffers.sort((a, b) => a.price - b.price);
-
-                let bestSubtotal = 0;
-                if (storeOffers.length > 0) {
-                    bestSubtotal = storeOffers[0].price * neededQty;
-                    overallOptimalTotal += bestSubtotal;
-                }
-
-                html += `
-                    <div class="bg-zinc-950/40 border border-red-950 rounded-lg p-3">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-bold text-red-100 text-xs">${ingMeta.name}</span>
-                            <span class="text-xs bg-zinc-900 border border-red-950 px-2 py-0.5 rounded text-red-300">Needed: ${neededQty}</span>
-                        </div>
-                        <div class="text-xs text-red-300 space-y-1">
-                `;
-
-                if (storeOffers.length === 0) {
-                    html += `<p class="italic text-zinc-500">No prices logged across locations yet.</p>`;
-                } else {
-                    storeOffers.forEach((offer, idx) => {
-                        const loc = cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
-                        const isCheapest = idx === 0;
-                        const rowStyle = isCheapest ? "bg-zinc-900 border border-red-900 text-red-100 font-medium" : "bg-zinc-950/40 text-red-400";
-                        
-                        let formattedDate = "Unknown";
-                        if (offer.updatedAt) {
-                            formattedDate = new Date(offer.updatedAt).toLocaleString([], { 
-                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-                            });
-                        }
-
-                        html += `
-                            <div class="flex justify-between items-center p-1.5 rounded gap-1 ${rowStyle}">
-                                <span>${loc.hold} / ${loc.town} ${isCheapest ? '⭐ <strong>(Cheapest)</strong>' : ''}</span>
-                                <span class="font-mono">${offer.price} Gold (Sub: ${(offer.price * neededQty).toFixed(2)})</span>
-                            </div>
-                        `;
-                    });
-                }
-
-                html += `</div></div>`;
-            }
-
-            container.innerHTML = html;
-            totalCostDisplay.textContent = `Total Optimal: ${overallOptimalTotal.toFixed(2)} Gold`;
-        }
-    </script>
+    <!-- Application Module Entry -->
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>

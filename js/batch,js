@@ -1,0 +1,89 @@
+import { state } from "./firebase-config.js";
+
+export function runOptimization() {
+    const totalDemands = {};
+    state.currentBatch.forEach(item => {
+        const rec = state.cachedRecipes[item.recipeId];
+        if (!rec || !rec.ingredients) return;
+        for (const [ingId, qty] of Object.entries(rec.ingredients)) {
+            totalDemands[ingId] = (totalDemands[ingId] || 0) + (qty * item.count);
+        }
+    });
+
+    const container = document.getElementById("detailed-breakdown-container");
+    const totalCostDisplay = document.getElementById("total-batch-cost");
+
+    if (!container) return;
+
+    if (Object.keys(totalDemands).length === 0) {
+        container.innerHTML = '<p class="text-sm text-red-400 italic">Add items to batch to view pricing breakdowns.</p>';
+        if (totalCostDisplay) totalCostDisplay.textContent = "Total Optimal: 0 Gold";
+        return;
+    }
+
+    let overallOptimalTotal = 0;
+    let html = "";
+
+    for (const [ingId, neededQty] of Object.entries(totalDemands)) {
+        const ingMeta = state.cachedIngredients[ingId] || { name: "Unknown Ingredient" };
+        const storeOffers = Object.values(state.cachedPrices)
+            .filter(p => p.ingredientId === ingId)
+            .sort((a, b) => a.price - b.price);
+
+        if (storeOffers.length > 0) {
+            overallOptimalTotal += storeOffers[0].price * neededQty;
+        }
+
+        html += `
+            <div class="bg-zinc-950/40 border border-red-950 rounded-lg p-3">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="font-bold text-red-100 text-xs">${ingMeta.name}</span>
+                    <span class="text-xs bg-zinc-900 border border-red-950 px-2 py-0.5 rounded text-red-300">Needed: ${neededQty}</span>
+                </div>
+            </div>`;
+    }
+
+    container.innerHTML = html;
+    if (totalCostDisplay) totalCostDisplay.textContent = `Total Optimal: ${overallOptimalTotal.toFixed(2)} Gold`;
+}
+
+export function initBatchHandlers() {
+    window.addRecipeToBatch = () => {
+        const recipeId = document.getElementById("simulator-recipe-select").value;
+        const count = parseInt(document.getElementById("simulator-qty").value) || 1;
+        if (!recipeId) return;
+
+        const existing = state.currentBatch.find(item => item.recipeId === recipeId);
+        if (existing) {
+            existing.count += count;
+        } else {
+            state.currentBatch.push({ recipeId, count });
+        }
+        renderBatchQueue();
+        runOptimization();
+    };
+
+    window.removeBatchItem = (index) => {
+        state.currentBatch.splice(index, 1);
+        renderBatchQueue();
+        runOptimization();
+    };
+}
+
+function renderBatchQueue() {
+    const container = document.getElementById("batch-queue-list");
+    if (!container) return;
+
+    if (state.currentBatch.length === 0) {
+        container.innerHTML = '<p class="text-sm text-red-400 italic">No potions added to batch yet.</p>';
+        return;
+    }
+    container.innerHTML = state.currentBatch.map((item, idx) => {
+        const rec = state.cachedRecipes[item.recipeId] || { name: "Unknown" };
+        return `
+            <div class="flex items-center gap-2 bg-zinc-950 border border-red-950 px-3 py-1.5 rounded-full text-xs text-red-200">
+                <span>${rec.name} <strong>x${item.count}</strong></span>
+                <button onclick="removeBatchItem(${idx})" class="text-red-400 hover:text-white font-bold ml-1">×</button>
+            </div>`;
+    }).join("");
+}

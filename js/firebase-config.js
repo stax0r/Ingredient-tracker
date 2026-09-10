@@ -13,7 +13,6 @@ const firebaseConfig = {
     measurementId: "G-J94V9BMR1Q"
 };
 
-// Replaced safely via GitHub Actions workflow
 export const DISCORD_WEBHOOK_URL = "DISCORD_WEBHOOK_PLACEHOLDER";
 export const DEFAULT_BOT_NAME = "DEFAULT_BOT_NAME_PLACEHOLDER";
 
@@ -21,7 +20,6 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getDatabase(app);
 
-// State Cache
 export const state = {
     cachedRecipes: {},
     cachedIngredients: {},
@@ -31,7 +29,6 @@ export const state = {
     activeAdminTab: 'locations'
 };
 
-// Toast Notifications
 export function showToast(message, type = 'success') {
     const container = document.getElementById("toast-container");
     if (!container) return;

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,91 +11,137 @@
 
     <!-- Custom Scrollbar & Overrides Stylesheet -->
     <link rel="stylesheet" href="css/styles.css">
-    
-<div class="flex items-center gap-4">
-    <div id="admin-toggles" class="hidden flex items-center gap-2 border-r border-red-950 pr-4">
-        <button onclick="openAdminModal('locations')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📍 Locations</button>
-        <button onclick="openAdminModal('ingredients')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">🌿 Ingredients</button>
-        <button onclick="openAdminModal('recipes')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📜 Potions</button>
     </div>
-
-    <button id="guest-contrib-btn" onclick="openGuestModal()" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition">
-        Leave a missive with the latest valuation.
-    </button>
-
-    <div id="auth-container" class="flex items-center gap-3">
-
-    </div>
-</div>
 </head>
-<body class="bg-zinc-950 text-red-50 min-h-screen font-sans selection:bg-red-900 selection:text-white flex flex-col justify-between">
+
+<body
+    class="bg-zinc-950 text-red-50 min-h-screen font-sans selection:bg-red-900 selection:text-white flex flex-col justify-between">
 
     <div>
         <!-- Header -->
-        <header class="bg-zinc-900 border-b border-red-950 p-4 flex flex-col md:flex-row justify-between items-center gap-3 shadow-lg">
+        <header
+            class="bg-zinc-900 border-b border-red-950 p-4 flex flex-col md:flex-row justify-between items-center gap-3 shadow-lg">
             <div class="flex flex-col items-start">
-                <h1 class="text-2xl font-bold tracking-wider text-red-500 flex items-center gap-2">The Material Index</h1>
+                <h1 class="text-2xl font-bold tracking-wider text-red-500 flex items-center gap-2">The Material Index
+                </h1>
                 <span class="text-[10px] text-red-400/80 italic mt-0.5">Crafted by Silas Montclair</span>
             </div>
-            
+
             <div class="flex items-center gap-4">
                 <div id="admin-toggles" class="hidden flex items-center gap-2 border-r border-red-950 pr-4">
-                    <button onclick="openAdminModal('locations')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📍 Locations</button>
-                    <button onclick="openAdminModal('ingredients')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">🌿 Ingredients</button>
-                    <button onclick="openAdminModal('recipes')" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📜 Potions</button>
+                    <button onclick="openAdminModal('locations')"
+                        class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📍
+                        Locations</button>
+                    <button onclick="openAdminModal('ingredients')"
+                        class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">🌿
+                        Ingredients</button>
+                    <button onclick="openAdminModal('recipes')"
+                        class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📜
+                        Potions</button>
                 </div>
 
-                <button id="guest-contrib-btn" onclick="openGuestModal()" class="hidden bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition">
+                <button id="guest-contrib-btn" onclick="openGuestModal()"
+                    class="hidden bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition">
                     Leave a missive with the latest valuation.
                 </button>
 
                 <div id="auth-container" class="flex items-center gap-3">
                     <div id="logged-out-view" class="flex items-center gap-2">
-                        <input type="email" id="auth-email" placeholder="Email" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100">
-                        <input type="password" id="auth-password" placeholder="Password" class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100">
-                        <button onclick="handleLogin()" class="bg-red-900 hover:bg-red-800 text-white border border-red-700 px-3 py-1 rounded text-xs font-semibold">Sign In</button>
+                        <input type="email" id="auth-email" placeholder="Email"
+                            class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100">
+                        <input type="password" id="auth-password" placeholder="Password"
+                            class="bg-zinc-900 border border-red-950 rounded px-2 py-1 text-xs text-red-100">
+                        <button onclick="handleLogin()"
+                            class="bg-red-900 hover:bg-red-800 text-white border border-red-700 px-3 py-1 rounded text-xs font-semibold">Sign
+                            In</button>
                     </div>
                     <div id="logged-in-view" class="hidden flex items-center gap-3">
                         <span id="user-display" class="text-xs text-red-300"></span>
-                        <button onclick="handleSignOut()" class="bg-zinc-900 hover:bg-zinc-800 border border-red-950 px-3 py-1 rounded text-xs font-semibold text-red-300">Sign Out</button>
+                        <button onclick="handleSignOut()"
+                            class="bg-zinc-900 hover:bg-zinc-800 border border-red-950 px-3 py-1 rounded text-xs font-semibold text-red-300">Sign
+                            Out</button>
                     </div>
                 </div>
             </div>
+            <div class="flex items-center gap-4">
+                <div id="admin-toggles" class="hidden flex items-center gap-2 border-r border-red-950 pr-4">
+                    <button onclick="openAdminModal('locations')"
+                        class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📍
+                        Locations</button>
+                    <button onclick="openAdminModal('ingredients')"
+                        class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">🌿
+                        Ingredients</button>
+                    <button onclick="openAdminModal('recipes')"
+                        class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📜
+                        Potions</button>
+                </div>
+
+                <button id="guest-contrib-btn" onclick="openGuestModal()"
+                    class="bg-zinc-800 hover:bg-zinc-700 border border-red-900 text-red-200 px-3 py-1.5 rounded text-xs font-semibold transition">
+                    Leave a missive with the latest valuation.
+                </button>
+
+                <div id="auth-container" class="flex items-center gap-3">
+
+                </div>
         </header>
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto p-6 space-y-6">
-            <section id="price-logger-section" class="hidden bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
+            <section id="price-logger-section"
+                class="hidden bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
                 <h2 class="text-lg font-semibold text-red-100">Record Ingredient Price</h2>
-                <form id="direct-price-form" onsubmit="handlePriceSubmit(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                    <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"><option value="">Select Ingredient...</option></select>
-                    <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"><option value="">Select Location...</option></select>
-                    <input type="number" step="0.01" id="price-amount" placeholder="0.00" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                    <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white">Record Price</button>
+                <form id="direct-price-form" onsubmit="handlePriceSubmit(event)"
+                    class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                    <select id="price-ingredient-select" required
+                        class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <option value="">Select Ingredient...</option>
+                    </select>
+                    <select id="price-location-select" required
+                        class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <option value="">Select Location...</option>
+                    </select>
+                    <input type="number" step="0.01" id="price-amount" placeholder="0.00" required
+                        class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <button type="submit"
+                        class="bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white">Record
+                        Price</button>
                 </form>
             </section>
 
             <section class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-red-950 pb-4">
+                <div
+                    class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-red-950 pb-4">
                     <div>
                         <h2 class="text-xl font-bold text-red-100">Ingredient Price Catalog</h2>
                         <p class="text-xs text-red-400">Comprehensive real-time market indices</p>
                     </div>
                     <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                        <select id="catalog-location-filter" class="w-full sm:w-56 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100"><option value="">Filter by Location (All)</option></select>
-                        <input type="text" id="catalog-search" placeholder="Search catalog..." class="w-full sm:w-64 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100">
+                        <select id="catalog-location-filter"
+                            class="w-full sm:w-56 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100">
+                            <option value="">Filter by Location (All)</option>
+                        </select>
+                        <input type="text" id="catalog-search" placeholder="Search catalog..."
+                            class="w-full sm:w-64 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100">
                     </div>
                 </div>
-                <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[48rem] overflow-y-auto pr-1"></div>
+                <div id="catalog-container"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[48rem] overflow-y-auto pr-1">
+                </div>
             </section>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 shadow-xl space-y-4">
                     <h2 class="text-lg font-semibold text-red-100">Batch Brewing</h2>
                     <div class="flex gap-3">
-                        <select id="simulator-recipe-select" class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-red-200"><option value="">Select a Potion Recipe...</option></select>
-                        <input type="number" id="simulator-qty" min="1" value="1" class="w-20 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-center text-red-200">
-                        <button onclick="addRecipeToBatch()" class="bg-red-900 hover:bg-red-800 border border-red-700 px-4 py-2 rounded text-sm font-semibold text-white">Add</button>
+                        <select id="simulator-recipe-select"
+                            class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-red-200">
+                            <option value="">Select a Potion Recipe...</option>
+                        </select>
+                        <input type="number" id="simulator-qty" min="1" value="1"
+                            class="w-20 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-center text-red-200">
+                        <button onclick="addRecipeToBatch()"
+                            class="bg-red-900 hover:bg-red-800 border border-red-700 px-4 py-2 rounded text-sm font-semibold text-white">Add</button>
                     </div>
                     <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto"></div>
                 </div>
@@ -130,25 +177,35 @@
                 <button onclick="closeGuestModal()" class="text-red-400 hover:text-white font-bold text-sm">✕</button>
             </div>
             <div class="space-y-3">
-                <select id="guest-contrib-type" onchange="toggleGuestFormFields()" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                <select id="guest-contrib-type" onchange="toggleGuestFormFields()"
+                    class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
                     <option value="price">Price update</option>
                     <option value="location">New Location Suggestion</option>
                     <option value="letter">A letter</option>
                 </select>
                 <div id="guest-price-fields" class="space-y-2">
-                    <select id="guest-ingredient-select" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></select>
-                    <select id="guest-location-select" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></select>
-                    <input type="number" step="0.01" id="guest-price-amount" placeholder="Price" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <select id="guest-ingredient-select"
+                        class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></select>
+                    <select id="guest-location-select"
+                        class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></select>
+                    <input type="number" step="0.01" id="guest-price-amount" placeholder="Price"
+                        class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
                 </div>
                 <div id="guest-location-fields" class="space-y-2 hidden">
-                    <input type="text" id="guest-loc-hold" placeholder="Hold / Region" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                    <input type="text" id="guest-loc-town" placeholder="Town / Settlement" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <input type="text" id="guest-loc-hold" placeholder="Hold / Region"
+                        class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <input type="text" id="guest-loc-town" placeholder="Town / Settlement"
+                        class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
                 </div>
                 <div id="guest-letter-fields" class="space-y-2 hidden">
-                    <textarea id="guest-letter-content" rows="4" placeholder="Write your letter here..." class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></textarea>
+                    <textarea id="guest-letter-content" rows="4" placeholder="Write your letter here..."
+                        class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></textarea>
                 </div>
-                <input type="text" id="guest-author" placeholder="Your Name" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                <button onclick="submitGuestWebhookRequest()" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white">Send Note</button>
+                <input type="text" id="guest-author" placeholder="Your Name"
+                    class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                <button onclick="submitGuestWebhookRequest()"
+                    class="w-full bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white">Send
+                    Note</button>
             </div>
         </div>
     </div>
@@ -156,4 +213,5 @@
     <!-- Application Module Entry -->
     <script type="module" src="js/app.js"></script>
 </body>
+
 </html>

@@ -11,19 +11,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Securely substitute environment variables/secrets into JS files
-      - name: Substitute Secrets and Variables
+      - name: Inject Environment Variables and Secrets
         env:
-          # Secret fetched from GitHub Secrets
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          # Variable fetched from GitHub Actions Variables
           DEFAULT_BOT_NAME: ${{ vars.DEFAULT_BOT_NAME }}
         run: |
-          # Inject secrets into JavaScript source directly at runner level
-          sed -i "s|DISCORD_WEBHOOK_PLACEHOLDER|${DISCORD_WEBHOOK_URL}|g" js/firebase-config.js
-          sed -i "s|DEFAULT_BOT_NAME_PLACEHOLDER|${DEFAULT_BOT_NAME}|g" js/firebase-config.js
+          sed -i "s|DISCORD_WEBHOOK_PLACEHOLDER|${DISCORD_WEBHOOK_URL}|g" js/app.js
+          sed -i "s|DEFAULT_BOT_NAME_PLACEHOLDER|${DEFAULT_BOT_NAME}|g" js/app.js
 
-      - name: Deploy to GitHub Pages (or static target)
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

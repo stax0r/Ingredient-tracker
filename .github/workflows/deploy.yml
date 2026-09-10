@@ -19,9 +19,12 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
-          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
-            sed -i "s|DISCORD_WEBHOOK_PLACEHOLDER|${DISCORD_WEBHOOK_URL}|g" js/app.js
-          fi
+          node -e '
+            const fs = require("fs");
+            let file = fs.readFileSync("js/app.js", "utf8");
+            file = file.replace("DISCORD_WEBHOOK_PLACEHOLDER", process.env.DISCORD_WEBHOOK_URL || "");
+            fs.writeFileSync("js/app.js", file);
+          '
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

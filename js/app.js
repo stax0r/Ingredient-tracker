@@ -44,9 +44,9 @@ function showToast(message, type = 'success') {
 
     toast.className = `pointer-events-auto px-4 py-3 rounded-lg border shadow-xl text-xs flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 ${bgColors[type] || bgColors.success}`;
     toast.innerHTML = `<span>${message}</span>`;
-    
+
     container.appendChild(toast);
-    
+
     setTimeout(() => toast.classList.remove("translate-y-2", "opacity-0"), 10);
     setTimeout(() => {
         toast.classList.add("translate-y-2", "opacity-0");
@@ -123,7 +123,7 @@ function renderCatalog() {
             .filter(p => p.ingredientId === ingId && (!selectedLocFilter || p.locationId === selectedLocFilter))
             .sort((a, b) => a.price - b.price);
 
-        const offersHtml = offers.length === 0 
+        const offersHtml = offers.length === 0
             ? '<p class="text-xs text-zinc-500 italic">No price records yet.</p>'
             : offers.map((offer, idx) => {
                 const loc = state.cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
@@ -280,6 +280,7 @@ function initApp() {
 
     document.getElementById("guest-contrib-type")?.addEventListener("change", updateGuestFormFields);
 
+
     // 4. Webhook Dispatch Handling
     document.getElementById("guest-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -292,7 +293,7 @@ function initApp() {
             const locSelect = document.getElementById("guest-location-select");
             const priceVal = document.getElementById("guest-price-amount").value;
             if (!ingSelect.value || !locSelect.value || !priceVal) return showToast("Fill all price fields.", "error");
-            
+
             const ingText = ingSelect.options[ingSelect.selectedIndex].text;
             const locText = locSelect.options[locSelect.selectedIndex].text;
             contentMessage = `💰 **Price Update**\n• **By:** ${author}\n• **Ingredient:** ${ingText}\n• **Location:** ${locText}\n• **Price:** ${priceVal} Gold`;
@@ -307,22 +308,37 @@ function initApp() {
             contentMessage = `📜 **Sealed Letter**\n• **From:** ${author}\n\n"${letter}"`;
         }
 
-        if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1547449768383348776/zTpJYP8t1V4-ZRE49N-_5s-a6whwsOBD6WmOxQYnmhdrD_DlkiDNIy3NIzBb5iHk9M3h")) {
+        // FIXED CHECK: Strictly verify the URL is valid and not the placeholder
+        const isPlaceholder = !DISCORD_WEBHOOK_URL ||
+            DISCORD_WEBHOOK_URL.trim() === "" ||
+            DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1547449768383348776/zTpJYP8t1V4-ZRE49N-_5s-a6whwsOBD6WmOxQYnmhdrD_DlkiDNIy3NIzBb5iHk9M3h");
+
+        if (isPlaceholder) {
             showToast("Missive recorded locally (Webhook URL omitted).", "info");
             guestModal?.classList.add("hidden");
             return;
         }
 
         try {
-            await fetch(DISCORD_WEBHOOK_URL, {
+            const response = await fetch(DISCORD_WEBHOOK_URL.trim(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: DEFAULT_BOT_NAME || "Guild Scribe", content: contentMessage })
+                body: JSON.stringify({
+                    username: DEFAULT_BOT_NAME,
+                    content: contentMessage
+                })
             });
-            showToast("Missive delivered successfully!", "success");
-            guestModal?.classList.add("hidden");
+
+            if (response.ok || response.status === 204) {
+                showToast("Missive delivered successfully!", "success");
+                guestModal?.classList.add("hidden");
+                document.getElementById("guest-form").reset();
+            } else {
+                const errData = await response.text();
+                showToast(`Discord Error (${response.status}): ${errData}`, "error");
+            }
         } catch (err) {
-            showToast("Error delivering missive: " + err.message, "error");
+            showToast("Network Error: " + err.message, "error");
         }
     });
 
@@ -346,7 +362,7 @@ function initApp() {
         e.preventDefault();
         const recipeId = document.getElementById("simulator-recipe-select").value;
         const count = parseInt(document.getElementById("simulator-qty").value) || 1;
-        
+
         if (!recipeId) return;
 
         const existing = state.currentBatch.find(item => item.recipeId === recipeId);

@@ -2,7 +2,7 @@ name: Deploy Web Application
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "Clean-up-+-standard-+-secrets" ]
 
 jobs:
   build-and-deploy:

@@ -1,17 +1,18 @@
-@import "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4";
-
-/* Custom utility styles and scrollbar overrides */
+/* Scrollbar customization */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
+
 ::-webkit-scrollbar-track {
     background: #09090b;
 }
+
 ::-webkit-scrollbar-thumb {
     background: #450a0a;
     border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
     background: #7f1d1d;
 }

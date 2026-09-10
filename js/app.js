@@ -50,7 +50,7 @@ function populateDropdowns() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
     initAuth();
     initAdminGlobalHandlers();
     initBatchHandlers();
@@ -84,4 +84,11 @@ document.addEventListener("DOMContentLoaded", () => {
         renderCatalog();
         runOptimization();
     });
-});
+}
+
+// Ensure execution happens even if DOMContentLoaded already fired before script load
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+} else {
+    initApp();
+}

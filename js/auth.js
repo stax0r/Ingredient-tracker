@@ -4,8 +4,14 @@ import { closeAdminModal } from "./admin.js";
 
 export function initAuth() {
     window.handleLogin = async () => {
-        const email = document.getElementById("auth-email").value;
-        const password = document.getElementById("auth-password").value;
+        const email = document.getElementById("auth-email")?.value;
+        const password = document.getElementById("auth-password")?.value;
+
+        if (!email || !password) {
+            showToast("Please enter both email and password.", "error");
+            return;
+        }
+
         try {
             await signInWithEmailAndPassword(auth, email, password);
             showToast("Successfully signed in!", "success");

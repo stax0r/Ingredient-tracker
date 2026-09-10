@@ -47,10 +47,29 @@ export function runOptimization() {
     if (totalCostDisplay) totalCostDisplay.textContent = `Total Optimal: ${overallOptimalTotal.toFixed(2)} Gold`;
 }
 
+function renderBatchQueue() {
+    const container = document.getElementById("batch-queue-list");
+    if (!container) return;
+
+    if (state.currentBatch.length === 0) {
+        container.innerHTML = '<p class="text-sm text-red-400 italic">No potions added to batch yet.</p>';
+        return;
+    }
+
+    container.innerHTML = state.currentBatch.map((item, idx) => {
+        const rec = state.cachedRecipes[item.recipeId] || { name: "Unknown" };
+        return `
+            <div class="flex items-center gap-2 bg-zinc-950 border border-red-950 px-3 py-1.5 rounded-full text-xs text-red-200">
+                <span>${rec.name} <strong>x${item.count}</strong></span>
+                <button onclick="window.removeBatchItem(${idx})" class="text-red-400 hover:text-white font-bold ml-1">×</button>
+            </div>`;
+    }).join("");
+}
+
 export function initBatchHandlers() {
     window.addRecipeToBatch = () => {
-        const recipeId = document.getElementById("simulator-recipe-select").value;
-        const count = parseInt(document.getElementById("simulator-qty").value) || 1;
+        const recipeId = document.getElementById("simulator-recipe-select")?.value;
+        const count = parseInt(document.getElementById("simulator-qty")?.value) || 1;
         if (!recipeId) return;
 
         const existing = state.currentBatch.find(item => item.recipeId === recipeId);
@@ -68,22 +87,4 @@ export function initBatchHandlers() {
         renderBatchQueue();
         runOptimization();
     };
-}
-
-function renderBatchQueue() {
-    const container = document.getElementById("batch-queue-list");
-    if (!container) return;
-
-    if (state.currentBatch.length === 0) {
-        container.innerHTML = '<p class="text-sm text-red-400 italic">No potions added to batch yet.</p>';
-        return;
-    }
-    container.innerHTML = state.currentBatch.map((item, idx) => {
-        const rec = state.cachedRecipes[item.recipeId] || { name: "Unknown" };
-        return `
-            <div class="flex items-center gap-2 bg-zinc-950 border border-red-950 px-3 py-1.5 rounded-full text-xs text-red-200">
-                <span>${rec.name} <strong>x${item.count}</strong></span>
-                <button onclick="removeBatchItem(${idx})" class="text-red-400 hover:text-white font-bold ml-1">×</button>
-            </div>`;
-    }).join("");
 }

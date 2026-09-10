@@ -2,7 +2,7 @@ name: Deploy Web Application
 
 on:
   push:
-    branches: [ "main", "Clean-up-+-standard-+-secrets" ]
+    branches: [ "main", "dev" ]
   workflow_dispatch:
 
 permissions:

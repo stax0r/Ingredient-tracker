@@ -4,7 +4,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
 
 // Global Variables Injected by GitHub Actions Workflow
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1547449768383348776/zTpJYP8t1V4-ZRE49N-_5s-a6whwsOBD6WmOxQYnmhdrD_DlkiDNIy3NIzBb5iHk9M3h";
-const DEFAULT_BOT_NAME = "New Letter";;
+const DEFAULT_BOT_NAME = "New Letter";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDTQPUXzYr8UAawpvNce6wbXJC07-ZOmeo",
@@ -311,7 +311,7 @@ function initApp() {
         // FIXED CHECK: Strictly verify the URL is valid and not the placeholder
         const isPlaceholder = !DISCORD_WEBHOOK_URL ||
             DISCORD_WEBHOOK_URL.trim() === "" ||
-            DISCORD_WEBHOOK_URL.includes("https://discord.com/api/webhooks/1547449768383348776/zTpJYP8t1V4-ZRE49N-_5s-a6whwsOBD6WmOxQYnmhdrD_DlkiDNIy3NIzBb5iHk9M3h");
+            DISCORD_WEBHOOK_URL.includes("DISCORD_WEBHOOK_PLACEHOLDER");
 
         if (isPlaceholder) {
             showToast("Missive recorded locally (Webhook URL omitted).", "info");

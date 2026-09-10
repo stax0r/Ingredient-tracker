@@ -227,6 +227,107 @@ function updateGuestFormFields() {
 
 // App Initialization
 function initApp() {
+    // Login Modal Toggle
+    const loginModal = document.getElementById("login-modal");
+    const openLoginBtn = document.getElementById("btn-open-login");
+
+    openLoginBtn?.addEventListener("click", () => loginModal?.classList.remove("hidden"));
+    document.getElementById("btn-close-login")?.addEventListener("click", () => loginModal?.classList.add("hidden"));
+
+    // Update Auth State handling
+    onAuthStateChanged(auth, (user) => {
+        const loggedInView = document.getElementById("logged-in-view");
+        const adminToggles = document.getElementById("admin-toggles");
+        const guestContribBtn = document.getElementById("guest-contrib-btn");
+        const priceLoggerSection = document.getElementById("price-logger-section");
+
+        const isLoggedIn = !!user;
+
+        if (openLoginBtn) openLoginBtn.classList.toggle("hidden", isLoggedIn);
+        if (loginModal && isLoggedIn) loginModal.classList.add("hidden");
+        if (loggedInView) loggedInView.classList.toggle("hidden", !isLoggedIn);
+        if (adminToggles) adminToggles.classList.toggle("hidden", !isLoggedIn);
+        if (priceLoggerSection) priceLoggerSection.classList.toggle("hidden", !isLoggedIn);
+        if (guestContribBtn) guestContribBtn.classList.toggle("hidden", isLoggedIn);
+
+        if (isLoggedIn) {
+            const userDisplay = document.getElementById("user-display");
+            if (userDisplay) userDisplay.textContent = user.email;
+        }
+    });
+
+    // Admin Modal Event Listeners
+    const adminModal = document.getElementById("admin-modal");
+    const adminTitle = document.getElementById("admin-modal-title");
+    const adminContent = document.getElementById("admin-modal-content");
+
+    document.getElementById("btn-close-admin")?.addEventListener("click", () => {
+        adminModal?.classList.add("hidden");
+    });
+
+    function openAdminModal(title, type) {
+        if (!adminModal || !adminTitle || !adminContent) return;
+        adminTitle.textContent = title;
+
+        let fieldsHtml = "";
+        if (type === "locations") {
+            fieldsHtml = `
+                <form id="admin-add-location-form" class="space-y-2 border-b border-red-950 pb-4">
+                    <h3 class="text-xs font-bold text-red-200">Add New Location</h3>
+                    <input type="text" id="admin-loc-hold" placeholder="Hold / Region" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <input type="text" id="admin-loc-town" placeholder="Town / Settlement" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold">Save Location</button>
+                </form>`;
+        } else if (type === "ingredients") {
+            fieldsHtml = `
+                <form id="admin-add-ingredient-form" class="space-y-2 border-b border-red-950 pb-4">
+                    <h3 class="text-xs font-bold text-red-200">Add New Ingredient</h3>
+                    <input type="text" id="admin-ing-name" placeholder="Ingredient Name" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold">Save Ingredient</button>
+                </form>`;
+        } else if (type === "recipes") {
+            fieldsHtml = `
+                <form id="admin-add-recipe-form" class="space-y-2 border-b border-red-950 pb-4">
+                    <h3 class="text-xs font-bold text-red-200">Add New Potion Recipe</h3>
+                    <input type="text" id="admin-rec-name" placeholder="Potion Name" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold">Save Potion</button>
+                </form>`;
+        }
+
+        adminContent.innerHTML = fieldsHtml;
+        adminModal.classList.remove("hidden");
+
+        // Submit listener for adding records
+        adminContent.querySelector("form")?.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const id = Date.now().toString();
+            let targetRef = "";
+            let payload = {};
+
+            if (type === "locations") {
+                targetRef = `locations/${id}`;
+                payload = { hold: document.getElementById("admin-loc-hold").value, town: document.getElementById("admin-loc-town").value };
+            } else if (type === "ingredients") {
+                targetRef = `ingredients/${id}`;
+                payload = { name: document.getElementById("admin-ing-name").value };
+            } else if (type === "recipes") {
+                targetRef = `recipes/${id}`;
+                payload = { name: document.getElementById("admin-rec-name").value, ingredients: {} };
+            }
+
+            set(ref(db, targetRef), payload)
+                .then(() => {
+                    showToast(`${title} item saved!`, "success");
+                    adminModal.classList.add("hidden");
+                })
+                .catch(err => showToast("Error saving item: " + err.message, "error"));
+        });
+    }
+
+    document.getElementById("btn-admin-locations")?.addEventListener("click", () => openAdminModal("Location Management", "locations"));
+    document.getElementById("btn-admin-ingredients")?.addEventListener("click", () => openAdminModal("Ingredient Management", "ingredients"));
+    document.getElementById("btn-admin-recipes")?.addEventListener("click", () => openAdminModal("Potion Management", "recipes"));
+
     // 1. Auth Listener
     onAuthStateChanged(auth, (user) => {
         const authForm = document.getElementById("auth-form");

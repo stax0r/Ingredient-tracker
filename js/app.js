@@ -128,10 +128,19 @@ function renderCatalog() {
             ? '<p class="text-xs text-zinc-500 italic">No price records yet.</p>'
             : offers.map((offer, idx) => {
                 const loc = state.cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
+                
+                // Format date as "Short Month Day" (e.g., "Oct 24")
+                const updatedDate = offer.updatedAt 
+                    ? new Date(offer.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    : '';
+
                 return `
                     <div class="flex justify-between items-center p-1.5 rounded text-xs ${idx === 0 ? 'bg-zinc-950 text-red-100 border border-red-900/80 font-medium' : 'bg-zinc-900/50 text-red-400'}">
                         <span>${loc.hold} / ${loc.town} ${idx === 0 ? '⭐' : ''}</span>
-                        <span class="font-mono">${offer.price} Gold</span>
+                        <div class="flex items-center gap-2">
+                            ${updatedDate ? `<span class="text-[10px] text-zinc-500 font-normal">${updatedDate}</span>` : ''}
+                            <span class="font-mono">${offer.price} Gold</span>
+                        </div>
                     </div>`;
             }).join("");
 

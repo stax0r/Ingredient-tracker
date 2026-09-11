@@ -173,16 +173,30 @@ function runOptimization() {
             .sort((a, b) => a.price - b.price);
 
         if (storeOffers.length > 0) {
-            overallOptimalTotal += storeOffers[0].price * neededQty;
-        }
+            const bestOffer = storeOffers[0];
+            overallOptimalTotal += bestOffer.price * neededQty;
+            const bestLoc = state.cachedLocations[bestOffer.locationId] || { hold: "Unknown", town: "Unknown" };
 
-        html += `
-            <div class="bg-zinc-950/40 border border-red-950 rounded-lg p-3">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="font-bold text-red-100 text-xs">${ingMeta.name}</span>
-                    <span class="text-xs bg-zinc-900 border border-red-950 px-2 py-0.5 rounded text-red-300">Needed: ${neededQty}</span>
-                </div>
-            </div>`;
+            html += `
+        <div class="bg-zinc-950/40 border border-red-950 rounded-lg p-3">
+            <div class="flex justify-between items-center mb-1">
+                <span class="font-bold text-red-100 text-xs">${ingMeta.name}</span>
+                <span class="text-xs bg-zinc-900 border border-red-950 px-2 py-0.5 rounded text-red-300">Needed: ${neededQty}</span>
+            </div>
+            <div class="text-xs text-red-400">
+                Best Price: <span class="font-bold text-red-200">${bestOffer.price} Gold</span> at ${bestLoc.hold} / ${bestLoc.town}
+            </div>
+        </div>`;
+        } else {
+            html += `
+        <div class="bg-zinc-950/40 border border-red-950 rounded-lg p-3">
+            <div class="flex justify-between items-center mb-1">
+                <span class="font-bold text-red-100 text-xs">${ingMeta.name}</span>
+                <span class="text-xs bg-zinc-900 border border-red-950 px-2 py-0.5 rounded text-red-300">Needed: ${neededQty}</span>
+            </div>
+            <div class="text-xs text-red-500 italic">No price records available</div>
+        </div>`;
+        }
     }
 
     container.innerHTML = html;
@@ -287,11 +301,25 @@ function initApp() {
                 </form>`;
         } else if (type === "recipes") {
             fieldsHtml = `
-                <form id="admin-add-recipe-form" class="space-y-2 border-b border-red-950 pb-4">
-                    <h3 class="text-xs font-bold text-red-200">Add New Potion Recipe</h3>
-                    <input type="text" id="admin-rec-name" placeholder="Potion Name" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                    <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold">Save Potion</button>
-                </form>`;
+    <form id="admin-add-recipe-form" class="space-y-2 border-b border-red-950 pb-4">
+        <h3 class="text-xs font-bold text-red-200">Add New Potion Recipe</h3>
+        <input type="text" id="admin-rec-name" placeholder="Potion Name" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+
+        <div class="space-y-1">
+            <p class="text-xs text-red-300">Ingredients (up to 4):</p>
+            ${[1, 2, 3, 4].map(i => `
+                <div class="flex gap-2">
+                    <select id="admin-rec-ing-${i}" class="w-2/3 bg-zinc-950 border border-red-950 rounded p-1 text-xs text-red-100">
+                        <option value="">Select Ingredient ${i}...</option>
+                        ${Object.entries(state.cachedIngredients).map(([id, ing]) => `<option value="${id}">${ing.name}</option>`).join('')}
+                    </select>
+                    <input type="number" id="admin-rec-qty-${i}" placeholder="Qty" min="1" value="1" class="w-1/3 bg-zinc-950 border border-red-950 rounded p-1 text-xs text-red-100">
+                </div>
+            `).join('')}
+        </div>
+
+        <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold">Save Potion</button>
+    </form>`;
         }
 
         adminContent.innerHTML = fieldsHtml;
@@ -312,7 +340,15 @@ function initApp() {
                 payload = { name: document.getElementById("admin-ing-name").value };
             } else if (type === "recipes") {
                 targetRef = `recipes/${id}`;
-                payload = { name: document.getElementById("admin-rec-name").value, ingredients: {} };
+                const ingredients = {};
+                for (let i = 1; i <= 4; i++) {
+                    const ingId = document.getElementById(`admin-rec-ing-${i}`)?.value;
+                    const qty = parseInt(document.getElementById(`admin-rec-qty-${i}`)?.value) || 1;
+                    if (ingId) {
+                        ingredients[ingId] = qty;
+                    }
+                }
+                payload = { name: document.getElementById("admin-rec-name").value, ingredients };
             }
 
             set(ref(db, targetRef), payload)

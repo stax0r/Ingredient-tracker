@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// Global Variables Injected by GitHub Actions Workflow
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1547449768383348776/zTpJYP8t1V4-ZRE49N-_5s-a6whwsOBD6WmOxQYnmhdrD_DlkiDNIy3NIzBb5iHk9M3h";
 const DEFAULT_BOT_NAME = "New Letter";
 
@@ -21,7 +20,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// Application State
 const state = {
     cachedRecipes: {},
     cachedIngredients: {},
@@ -30,31 +28,34 @@ const state = {
     currentBatch: []
 };
 
-// Notification Utility
+// Fixed Toast Implementation
 function showToast(message, type = 'success') {
     const container = document.getElementById("toast-container");
     if (!container) return;
 
     const toast = document.createElement("div");
     const bgColors = {
-        success: "bg-zinc-900 border-red-800 text-red-100",
-        error: "bg-red-950 border-red-700 text-red-100",
-        info: "bg-zinc-900 border-zinc-700 text-zinc-100"
+        success: "toast-success",
+        error: "toast-error",
+        info: "toast-info"
     };
 
-    toast.className = `pointer-events-auto px-4 py-3 rounded-lg border shadow-xl text-xs flex items-center gap-3 transition-all duration-300 transform translate-y-2 opacity-0 ${bgColors[type] || bgColors.success}`;
+    toast.className = `toast-item ${bgColors[type] || bgColors.success}`;
     toast.innerHTML = `<span>${message}</span>`;
 
     container.appendChild(toast);
 
-    setTimeout(() => toast.classList.remove("translate-y-2", "opacity-0"), 10);
+    requestAnimationFrame(() => {
+        toast.classList.add("toast-show");
+    });
+
     setTimeout(() => {
-        toast.classList.add("translate-y-2", "opacity-0");
+        toast.classList.remove("toast-show");
+        toast.classList.add("toast-hide");
         setTimeout(() => toast.remove(), 300);
     }, 3500);
 }
 
-// UI Rendering Functions
 function populateDropdowns() {
     const ingSelects = [
         document.getElementById("price-ingredient-select"),
@@ -114,7 +115,7 @@ function renderCatalog() {
     }).sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
 
     if (filteredIngredients.length === 0) {
-        container.innerHTML = '<p class="text-sm text-red-400 italic">No matching ingredients found.</p>';
+        container.innerHTML = '<p class="text-xs text-red-400 italic">No matching ingredients found.</p>';
         return;
     }
 
@@ -128,7 +129,7 @@ function renderCatalog() {
             : offers.map((offer, idx) => {
                 const loc = state.cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
                 return `
-                    <div class="flex justify-between items-center p-1.5 rounded text-xs ${idx === 0 ? 'bg-zinc-950 text-red-100 border border-red-900 font-medium' : 'bg-zinc-900/50 text-red-400'}">
+                    <div class="flex justify-between items-center p-1.5 rounded text-xs ${idx === 0 ? 'bg-zinc-950 text-red-100 border border-red-900/80 font-medium' : 'bg-zinc-900/50 text-red-400'}">
                         <span>${loc.hold} / ${loc.town} ${idx === 0 ? '⭐' : ''}</span>
                         <span class="font-mono">${offer.price} Gold</span>
                     </div>`;
@@ -136,7 +137,7 @@ function renderCatalog() {
 
         return `
             <div class="bg-zinc-950/60 border border-red-950 rounded-lg p-4 space-y-2 flex flex-col h-48">
-                <h3 class="font-bold text-red-100 text-sm border-b border-red-950 pb-1 flex-shrink-0">${ing.name}</h3>
+                <h3 class="font-bold text-red-100 text-xs border-b border-red-950 pb-1 flex-shrink-0">${ing.name}</h3>
                 <div class="space-y-1 overflow-y-auto pr-1 flex-1">${offersHtml}</div>
             </div>`;
     }).join("");
@@ -158,7 +159,7 @@ function runOptimization() {
     if (!container) return;
 
     if (Object.keys(totalDemands).length === 0) {
-        container.innerHTML = '<p class="text-sm text-red-400 italic">Add items to batch to view pricing breakdowns.</p>';
+        container.innerHTML = '<p class="text-xs text-red-400 italic">Add items to batch to view pricing breakdowns.</p>';
         if (totalCostDisplay) totalCostDisplay.textContent = "Total Optimal: 0 Gold";
         return;
     }
@@ -184,7 +185,7 @@ function runOptimization() {
                 <span class="text-xs bg-zinc-900 border border-red-950 px-2 py-0.5 rounded text-red-300">Needed: ${neededQty}</span>
             </div>
             <div class="text-xs text-red-400">
-                Best Price: <span class="font-bold text-red-200">${bestOffer.price} Gold</span> at ${bestLoc.hold} / ${bestLoc.town}
+                Best Price: <span class="font-bold text-red-200 font-mono">${bestOffer.price} Gold</span> at ${bestLoc.hold} / ${bestLoc.town}
             </div>
         </div>`;
         } else {
@@ -208,7 +209,7 @@ function renderBatchQueue() {
     if (!container) return;
 
     if (state.currentBatch.length === 0) {
-        container.innerHTML = '<p class="text-sm text-red-400 italic">No potions added to batch yet.</p>';
+        container.innerHTML = '<p class="text-xs text-red-400 italic">No potions added to batch yet.</p>';
         return;
     }
 
@@ -231,7 +232,6 @@ function renderBatchQueue() {
     });
 }
 
-// Guest Form Field Toggler
 function updateGuestFormFields() {
     const type = document.getElementById("guest-contrib-type")?.value || "price";
     document.getElementById("guest-price-fields")?.classList.toggle("hidden", type !== "price");
@@ -239,16 +239,13 @@ function updateGuestFormFields() {
     document.getElementById("guest-letter-fields")?.classList.toggle("hidden", type !== "letter");
 }
 
-// App Initialization
 function initApp() {
-    // Login Modal Toggle
     const loginModal = document.getElementById("login-modal");
     const openLoginBtn = document.getElementById("btn-open-login");
 
     openLoginBtn?.addEventListener("click", () => loginModal?.classList.remove("hidden"));
     document.getElementById("btn-close-login")?.addEventListener("click", () => loginModal?.classList.add("hidden"));
 
-    //Auth State handling
     onAuthStateChanged(auth, (user) => {
         const loggedInView = document.getElementById("logged-in-view");
         const adminToggles = document.getElementById("admin-toggles");
@@ -262,8 +259,6 @@ function initApp() {
         if (loggedInView) loggedInView.classList.toggle("hidden", !isLoggedIn);
         if (adminToggles) adminToggles.classList.toggle("hidden", !isLoggedIn);
         if (priceLoggerSection) priceLoggerSection.classList.toggle("hidden", !isLoggedIn);
-
-        // Hide Contribute Market Data section when user is logged in
         if (guestContribSection) guestContribSection.classList.toggle("hidden", isLoggedIn);
 
         if (isLoggedIn) {
@@ -272,7 +267,6 @@ function initApp() {
         }
     });
 
-    // Admin Modal Event Listeners
     const adminModal = document.getElementById("admin-modal");
     const adminTitle = document.getElementById("admin-modal-title");
     const adminContent = document.getElementById("admin-modal-content");
@@ -288,46 +282,45 @@ function initApp() {
         let fieldsHtml = "";
         if (type === "locations") {
             fieldsHtml = `
-                <form id="admin-add-location-form" class="space-y-2 border-b border-red-950 pb-4">
+                <form id="admin-add-location-form" class="space-y-3 border-b border-red-950 pb-4">
                     <h3 class="text-xs font-bold text-red-200">Add New Location</h3>
-                    <input type="text" id="admin-loc-hold" placeholder="Hold / Region" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                    <input type="text" id="admin-loc-town" placeholder="Town / Settlement" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                    <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold">Save Location</button>
+                    <input type="text" id="admin-loc-hold" placeholder="Hold / Region" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
+                    <input type="text" id="admin-loc-town" placeholder="Town / Settlement" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
+                    <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold transition">Save Location</button>
                 </form>`;
         } else if (type === "ingredients") {
             fieldsHtml = `
-                <form id="admin-add-ingredient-form" class="space-y-2 border-b border-red-950 pb-4">
+                <form id="admin-add-ingredient-form" class="space-y-3 border-b border-red-950 pb-4">
                     <h3 class="text-xs font-bold text-red-200">Add New Ingredient</h3>
-                    <input type="text" id="admin-ing-name" placeholder="Ingredient Name" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                    <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold">Save Ingredient</button>
+                    <input type="text" id="admin-ing-name" placeholder="Ingredient Name" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
+                    <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold transition">Save Ingredient</button>
                 </form>`;
         } else if (type === "recipes") {
             fieldsHtml = `
-    <form id="admin-add-recipe-form" class="space-y-2 border-b border-red-950 pb-4">
+    <form id="admin-add-recipe-form" class="space-y-3 border-b border-red-950 pb-4">
         <h3 class="text-xs font-bold text-red-200">Add New Potion Recipe</h3>
-        <input type="text" id="admin-rec-name" placeholder="Potion Name" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+        <input type="text" id="admin-rec-name" placeholder="Potion Name" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
 
-        <div class="space-y-1">
+        <div class="space-y-2">
             <p class="text-xs text-red-300">Ingredients (up to 4):</p>
             ${[1, 2, 3, 4].map(i => `
                 <div class="flex gap-2">
-                    <select id="admin-rec-ing-${i}" class="w-2/3 bg-zinc-950 border border-red-950 rounded p-1 text-xs text-red-100">
+                    <select id="admin-rec-ing-${i}" class="w-2/3 bg-zinc-950 border border-red-950 rounded px-2 py-1.5 text-xs text-red-100">
                         <option value="">Select Ingredient ${i}...</option>
                         ${Object.entries(state.cachedIngredients).map(([id, ing]) => `<option value="${id}">${ing.name}</option>`).join('')}
                     </select>
-                    <input type="number" id="admin-rec-qty-${i}" placeholder="Qty" min="1" value="1" class="w-1/3 bg-zinc-950 border border-red-950 rounded p-1 text-xs text-red-100">
+                    <input type="number" id="admin-rec-qty-${i}" placeholder="Qty" min="1" value="1" class="w-1/3 bg-zinc-950 border border-red-950 rounded px-2 py-1.5 text-xs text-red-100">
                 </div>
             `).join('')}
         </div>
 
-        <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold">Save Potion</button>
+        <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold transition">Save Potion</button>
     </form>`;
         }
 
         adminContent.innerHTML = fieldsHtml;
         adminModal.classList.remove("hidden");
 
-        // Submit listener for adding records
         adminContent.querySelector("form")?.addEventListener("submit", (e) => {
             e.preventDefault();
             const id = Date.now().toString();
@@ -366,29 +359,6 @@ function initApp() {
     document.getElementById("btn-admin-ingredients")?.addEventListener("click", () => openAdminModal("Ingredient Management", "ingredients"));
     document.getElementById("btn-admin-recipes")?.addEventListener("click", () => openAdminModal("Potion Management", "recipes"));
 
-    // 1. Auth Listener
-    onAuthStateChanged(auth, (user) => {
-        const authForm = document.getElementById("auth-form");
-        const loggedInView = document.getElementById("logged-in-view");
-        const adminToggles = document.getElementById("admin-toggles");
-        const guestContribBtn = document.getElementById("guest-contrib-btn");
-        const priceLoggerSection = document.getElementById("price-logger-section");
-
-        const isLoggedIn = !!user;
-
-        if (authForm) authForm.classList.toggle("hidden", isLoggedIn);
-        if (loggedInView) loggedInView.classList.toggle("hidden", !isLoggedIn);
-        if (adminToggles) adminToggles.classList.toggle("hidden", !isLoggedIn);
-        if (priceLoggerSection) priceLoggerSection.classList.toggle("hidden", !isLoggedIn);
-        if (guestContribBtn) guestContribBtn.classList.toggle("hidden", isLoggedIn);
-
-        if (isLoggedIn) {
-            const userDisplay = document.getElementById("user-display");
-            if (userDisplay) userDisplay.textContent = user.email;
-        }
-    });
-
-    // 2. Authentication Submit Events
     document.getElementById("auth-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("auth-email").value;
@@ -406,21 +376,8 @@ function initApp() {
         showToast("Signed out.", "info");
     });
 
-    // 3. Guest Modal Events
-    const guestModal = document.getElementById("guest-modal");
-    document.getElementById("guest-contrib-btn")?.addEventListener("click", () => {
-        guestModal?.classList.remove("hidden");
-        updateGuestFormFields();
-    });
-
-    document.getElementById("btn-close-guest")?.addEventListener("click", () => {
-        guestModal?.classList.add("hidden");
-    });
-
     document.getElementById("guest-contrib-type")?.addEventListener("change", updateGuestFormFields);
 
-
-    // 4. Webhook Dispatch Handling
     document.getElementById("guest-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
         const type = document.getElementById("guest-contrib-type").value;
@@ -447,7 +404,6 @@ function initApp() {
             contentMessage = `📜 **Sealed Letter**\n• **From:** ${author}\n\n"${letter}"`;
         }
 
-        // FIXED CHECK: Strictly verify the URL is valid and not the placeholder
         const isPlaceholder = !DISCORD_WEBHOOK_URL ||
             DISCORD_WEBHOOK_URL.trim() === "" ||
             DISCORD_WEBHOOK_URL.includes("DISCORD_WEBHOOK_PLACEHOLDER");
@@ -482,7 +438,6 @@ function initApp() {
         }
     });
 
-    // 5. Price Logger Submit Event
     document.getElementById("direct-price-form")?.addEventListener("submit", (e) => {
         e.preventDefault();
         const ingredientId = document.getElementById("price-ingredient-select").value;
@@ -497,7 +452,6 @@ function initApp() {
         }).catch(err => showToast("Save failed: " + err.message, "error"));
     });
 
-    // 6. Batch Simulator Queue Submit Event
     document.getElementById("batch-add-form")?.addEventListener("submit", (e) => {
         e.preventDefault();
         const recipeId = document.getElementById("simulator-recipe-select").value;
@@ -515,11 +469,9 @@ function initApp() {
         runOptimization();
     });
 
-    // 7. Catalog Search Events
     document.getElementById("catalog-search")?.addEventListener("input", renderCatalog);
     document.getElementById("catalog-location-filter")?.addEventListener("change", renderCatalog);
 
-    // 8. Database Subscriptions
     onValue(ref(db, 'locations'), (snapshot) => {
         state.cachedLocations = snapshot.val() || {};
         populateDropdowns();
@@ -537,6 +489,7 @@ function initApp() {
     onValue(ref(db, 'recipes'), (snapshot) => {
         state.cachedRecipes = snapshot.val() || {};
         populateDropdowns();
+        renderCatalog();
         runOptimization();
     });
 
@@ -547,7 +500,6 @@ function initApp() {
     });
 }
 
-// Execute on DOM Ready
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initApp);
 } else {

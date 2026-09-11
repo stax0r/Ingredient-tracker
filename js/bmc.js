@@ -2,18 +2,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("footer-custom-content");
     if (!container) return;
 
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.src = "https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js";
-    script.setAttribute("data-name", "bmc-button");
-    script.setAttribute("data-slug", "stax0r");
-    script.setAttribute("data-color", "#000000");
-    script.setAttribute("data-emoji", "🍺");
-    script.setAttribute("data-font", "Poppins");
-    script.setAttribute("data-text", "Buy me a beer");
-    script.setAttribute("data-outline-color", "#ffffff");
-    script.setAttribute("data-font-color", "#ffffff");
-    script.setAttribute("data-coffee-color", "#FFDD00");
+    // Direct link button element styled to match the Buy Me a Coffee widget
+    const link = document.createElement("a");
+    link.href = "https://www.buymeacoffee.com/stax0r";
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.className = "inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg text-xs font-semibold border border-white hover:bg-zinc-800 transition shadow-md";
+    link.innerHTML = `<span>🍺</span> <span>Buy me a beer</span>`;
 
-    container.appendChild(script);
+    container.appendChild(link);
 });

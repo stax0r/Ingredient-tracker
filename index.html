@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Material Index</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
@@ -12,34 +13,34 @@
 
     <div>
         <!-- Header -->
-        <header class="bg-zinc-900 border-b border-red-950 p-4 flex flex-col md:flex-row justify-between items-center gap-3 shadow-lg">
+        <header class="bg-zinc-900 border-b border-red-950/80 p-4 flex flex-col md:flex-row justify-between items-center gap-3 shadow-xl">
             <div class="flex flex-col items-start">
                 <h1 class="text-2xl font-bold tracking-wider text-red-500 flex items-center gap-2">The Material Index</h1>
                 <span class="text-[10px] text-red-400/80 italic mt-0.5">Crafted by Silas Montclair</span>
             </div>
 
             <div class="flex items-center gap-4">
-                <div id="admin-toggles" class="hidden flex items-center gap-2 border-r border-red-950 pr-4">
+                <div id="admin-toggles" class="hidden flex items-center gap-2 border-r border-red-950/80 pr-4">
                     <button id="btn-admin-locations" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📍 Locations</button>
                     <button id="btn-admin-ingredients" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">🌿 Ingredients</button>
                     <button id="btn-admin-recipes" class="bg-zinc-800 hover:bg-zinc-700 border border-red-900/50 hover:border-red-600 px-3 py-1.5 rounded text-xs font-semibold text-red-200 transition">📜 Potions</button>
                 </div>
 
                 <div id="auth-container" class="flex items-center gap-3">
-                    <button id="btn-open-login" class="bg-red-900 hover:bg-red-800 text-white border border-red-700 px-3 py-1.5 rounded text-xs font-semibold transition">Sign In</button>
+                    <button id="btn-open-login" class="bg-red-900 hover:bg-red-800 text-white border border-red-700 px-3.5 py-1.5 rounded text-xs font-semibold transition">Sign In</button>
                     <div id="logged-in-view" class="hidden flex items-center gap-3">
-                        <span id="user-display" class="text-xs text-red-300"></span>
+                        <span id="user-display" class="text-xs text-red-300 font-mono"></span>
                         <button id="btn-signout" class="bg-zinc-900 hover:bg-zinc-800 border border-red-950 px-3 py-1 rounded text-xs font-semibold text-red-300 transition">Sign Out</button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
+        <!-- Main Content Container -->
         <main class="max-w-7xl mx-auto p-6 space-y-6">
             <!-- Price Logger (Admin Only) -->
             <section id="price-logger-section" class="hidden bg-zinc-900 border border-red-950 rounded-xl p-5 shadow-xl space-y-4">
-                <h2 class="text-lg font-semibold text-red-100">Record Ingredient Price</h2>
+                <h2 class="text-md font-bold text-red-100">Record Ingredient Price</h2>
                 <form id="direct-price-form" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                     <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                         <option value="">Select Ingredient...</option>
@@ -47,7 +48,7 @@
                     <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                         <option value="">Select Location...</option>
                     </select>
-                    <input type="number" step="0.01" id="price-amount" placeholder="0.00" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
+                    <input type="number" step="0.01" id="price-amount" placeholder="0.00 Gold" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                     <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white transition">Record Price</button>
                 </form>
             </section>
@@ -61,7 +62,7 @@
                 
                 <form id="guest-form" class="space-y-4">
                     <div>
-                        <label class="block text-xs text-red-300 mb-1 font-medium">Missive Type</label>
+                        <label class="block text-xs text-red-300 mb-1.5 font-medium">Missive Type</label>
                         <select id="guest-contrib-type" class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                             <option value="price">Price Update</option>
                             <option value="location">New Location Suggestion</option>
@@ -100,12 +101,12 @@
 
             <!-- Ingredient Price Catalog -->
             <section class="bg-zinc-900 border border-red-950 rounded-xl p-5 shadow-xl space-y-4">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-red-950 pb-3">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-red-950/80 pb-3">
                     <div>
                         <h2 class="text-xl font-bold text-red-100">Ingredient Price Catalog</h2>
                         <p class="text-xs text-red-400 mt-0.5">Comprehensive real-time market indices</p>
                     </div>
-                    <div class="catalog-controls flex gap-3 w-full md:w-auto">
+                    <div class="catalog-controls flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                         <select id="catalog-location-filter" class="w-full sm:w-56 bg-zinc-950 border border-red-950 rounded-lg px-3 py-2 text-xs text-red-100">
                             <option value="">Filter by Location (All)</option>
                         </select>
@@ -141,10 +142,10 @@
     </div>
 
     <!-- Toast Notifications Container -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <div id="toast-container"></div>
 
     <!-- Admin Modal -->
-    <div id="admin-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+    <div id="admin-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
         <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 max-w-xl w-full space-y-4 shadow-2xl relative">
             <button id="btn-close-admin" aria-label="Close" class="btn-close-modal">✕</button>
             <div class="border-b border-red-950 pb-3 pr-6">
@@ -155,7 +156,7 @@
     </div>
 
     <!-- Login Modal -->
-    <div id="login-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+    <div id="login-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
         <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 max-w-sm w-full space-y-4 shadow-2xl relative">
             <button id="btn-close-login" aria-label="Close" class="btn-close-modal">✕</button>
             <div class="border-b border-red-950 pb-2 pr-6">
@@ -173,7 +174,7 @@
     <footer class="bg-zinc-900 border-t border-red-950 p-4 mt-8">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
             <p class="text-xs text-red-400">&copy; The Material Index</p>
-            <div id="footer-custom-content" class="flex items-center justify-center"></div>
+            <div id="footer-custom-content"></div>
         </div>
     </footer>
 

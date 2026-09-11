@@ -1,0 +1,181 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #09090b;
+    color: #fef2f2;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #450a0a;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #7f1d1d;
+}
+
+/* Base Form Inputs & Selects */
+input, select, textarea, button {
+    font-family: inherit;
+    font-size: 0.75rem;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+    width: 100%;
+    background-color: #09090b;
+    border: 1px solid #3f0e0e;
+    color: #fef2f2;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #991b1b;
+    box-shadow: 0 0 0 1px #991b1b;
+}
+
+/* Buttons */
+button {
+    cursor: pointer;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* Clean Top-Right Modal Close Button */
+.btn-close-modal {
+    position: absolute;
+    top: 0.875rem;
+    right: 0.875rem;
+    background: transparent !important;
+    border: none !important;
+    color: #a1a1aa;
+    font-size: 0.875rem;
+    font-weight: 700;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.375rem;
+    padding: 0;
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-close-modal:hover {
+    color: #f87171;
+    background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Toast Notifications Styling */
+#toast-container {
+    position: fixed;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+.toast-item {
+    pointer-events: auto;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #3f0e0e;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.toast-item.toast-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-item.toast-hide {
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+.toast-success {
+    background-color: #18181b;
+    border-color: #7f1d1d;
+    color: #fef2f2;
+}
+
+.toast-error {
+    background-color: #450a0a;
+    border-color: #991b1b;
+    color: #fef2f2;
+}
+
+.toast-info {
+    background-color: #18181b;
+    border-color: #27272a;
+    color: #e4e4e7;
+}
+
+/* Buy Me A Coffee Embed Styling */
+#footer-custom-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+}
+
+#footer-custom-content img {
+    height: 36px !important;
+    width: auto !important;
+    display: block;
+}
+
+.bmc-btn-container {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#simulator-qty::-webkit-inner-spin-button,
+#simulator-qty::-webkit-outer-spin-button {
+    opacity: 0.5;
+}

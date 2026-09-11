@@ -1,0 +1,33 @@
+name: Deploy Web Application
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Inject Environment Variables and Secrets
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            let file = fs.readFileSync("js/app.js", "utf8");
+            file = file.replace("DISCORD_WEBHOOK_PLACEHOLDER", process.env.DISCORD_WEBHOOK_URL || "");
+            fs.writeFileSync("js/app.js", file);
+          '
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./

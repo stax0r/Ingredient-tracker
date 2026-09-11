@@ -57,6 +57,10 @@ function showToast(message, type = 'success') {
 }
 
 function populateDropdowns() {
+    // Sorted Ingredients
+    const sortedIngredients = Object.entries(state.cachedIngredients)
+        .sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
+
     const ingSelects = [
         document.getElementById("price-ingredient-select"),
         document.getElementById("guest-ingredient-select")
@@ -65,11 +69,19 @@ function populateDropdowns() {
         if (!select) return;
         const currentVal = select.value;
         select.innerHTML = '<option value="">Select Ingredient...</option>' +
-            Object.entries(state.cachedIngredients)
+            sortedIngredients
                 .map(([id, ing]) => `<option value="${id}">${ing.name}</option>`)
                 .join("");
         select.value = currentVal;
     });
+
+    // Sorted Locations
+    const sortedLocations = Object.entries(state.cachedLocations)
+        .sort((a, b) => {
+            const nameA = `${a[1].hold} / ${a[1].town}`.toLowerCase();
+            const nameB = `${b[1].hold} / ${b[1].town}`.toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
 
     const locSelects = [
         document.getElementById("price-location-select"),
@@ -81,17 +93,21 @@ function populateDropdowns() {
         const currentVal = select.value;
         const isFilter = select.id === "catalog-location-filter";
         select.innerHTML = `<option value="">${isFilter ? 'Filter by Location (All)' : 'Select Location...'}</option>` +
-            Object.entries(state.cachedLocations)
+            sortedLocations
                 .map(([id, loc]) => `<option value="${id}">${loc.hold} / ${loc.town}</option>`)
                 .join("");
         select.value = currentVal;
     });
 
+    // Sorted Recipes (Potions)
+    const sortedRecipes = Object.entries(state.cachedRecipes)
+        .sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
+
     const recipeSelect = document.getElementById("simulator-recipe-select");
     if (recipeSelect) {
         const currentVal = recipeSelect.value;
         recipeSelect.innerHTML = '<option value="">Select a Potion Recipe...</option>' +
-            Object.entries(state.cachedRecipes)
+            sortedRecipes
                 .map(([id, rec]) => `<option value="${id}">${rec.name}</option>`)
                 .join("");
         recipeSelect.value = currentVal;
@@ -105,6 +121,14 @@ function renderCatalog() {
     const query = (document.getElementById("catalog-search")?.value || "").toLowerCase();
     const selectedLocFilter = document.getElementById("catalog-location-filter")?.value;
 
+    // Collect all ingredient IDs used across all recipes
+    const usedIngredientIds = new Set();
+    Object.values(state.cachedRecipes).forEach(recipe => {
+        if (recipe.ingredients) {
+            Object.keys(recipe.ingredients).forEach(ingId => usedIngredientIds.add(ingId));
+        }
+    });
+
     const filteredIngredients = Object.entries(state.cachedIngredients).filter(([id, ing]) => {
         const matchesSearch = ing.name.toLowerCase().includes(query);
         if (!matchesSearch) return false;
@@ -112,7 +136,18 @@ function renderCatalog() {
             return Object.values(state.cachedPrices).some(p => p.ingredientId === id && p.locationId === selectedLocFilter);
         }
         return true;
-    }).sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
+    }).sort(([idA, ingA], [idB, ingB]) => {
+        const isUsedA = usedIngredientIds.has(idA);
+        const isUsedB = usedIngredientIds.has(idB);
+
+        // Active recipe ingredients first, unused ingredients at the bottom
+        if (isUsedA !== isUsedB) {
+            return isUsedA ? -1 : 1;
+        }
+
+        // Secondary sort: Alphabetical
+        return ingA.name.toLowerCase().localeCompare(ingB.name.toLowerCase());
+    });
 
     if (filteredIngredients.length === 0) {
         container.innerHTML = '<p class="text-xs text-red-400 italic">No matching ingredients found.</p>';
@@ -120,6 +155,8 @@ function renderCatalog() {
     }
 
     container.innerHTML = filteredIngredients.map(([ingId, ing]) => {
+        const isUsedInRecipe = usedIngredientIds.has(ingId);
+
         const offers = Object.values(state.cachedPrices)
             .filter(p => p.ingredientId === ingId && (!selectedLocFilter || p.locationId === selectedLocFilter))
             .sort((a, b) => a.price - b.price);
@@ -144,10 +181,15 @@ function renderCatalog() {
                     </div>`;
             }).join("");
 
+        // Apply greyed out styles if the ingredient is not in any recipe
+        const cardStyle = isUsedInRecipe
+            ? 'bg-zinc-950/60 border-red-950 text-red-100'
+            : 'bg-zinc-950/20 border-zinc-900/50 opacity-50 grayscale';
+
         return `
-        <div class="bg-zinc-950/60 border border-red-950 rounded-lg p-4 space-y-2 flex flex-col h-48">
-        <div class="flex justify-between items-center border-b border-red-950 pb-1 flex-shrink-0">
-            <h3 class="font-bold text-red-100 text-xs">${ing.name}</h3>
+        <div class="border rounded-lg p-4 space-y-2 flex flex-col h-48 transition-all ${cardStyle}">
+        <div class="flex justify-between items-center border-b border-red-950/50 pb-1 flex-shrink-0">
+            <h3 class="font-bold text-xs">${ing.name} ${!isUsedInRecipe ? '<span class="text-[10px] text-zinc-500 font-normal italic">(Unused)</span>' : ''}</h3>
             ${ing.suggestedPrice !== undefined && ing.suggestedPrice !== null
                 ? `<span class="text-[10px] text-zinc-400 font-mono bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded" title="Base Suggested Price">~${ing.suggestedPrice}g</span>`
                 : ''}
@@ -310,6 +352,9 @@ function initApp() {
                     <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold transition">Save Ingredient</button>
                 </form>`;
         } else if (type === "recipes") {
+            const sortedIngredients = Object.entries(state.cachedIngredients)
+                .sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
+
             fieldsHtml = `
     <form id="admin-add-recipe-form" class="space-y-3 border-b border-red-950 pb-4">
         <h3 class="text-xs font-bold text-red-200">Add New Potion Recipe</h3>
@@ -321,7 +366,7 @@ function initApp() {
                 <div class="flex gap-2">
                     <select id="admin-rec-ing-${i}" class="w-2/3 bg-zinc-950 border border-red-950 rounded px-2 py-1.5 text-xs text-red-100">
                         <option value="">Select Ingredient ${i}...</option>
-                        ${Object.entries(state.cachedIngredients).map(([id, ing]) => `<option value="${id}">${ing.name}</option>`).join('')}
+                        ${sortedIngredients.map(([id, ing]) => `<option value="${id}">${ing.name}</option>`).join('')}
                     </select>
                     <input type="number" id="admin-rec-qty-${i}" placeholder="Qty" min="1" value="1" class="w-1/3 bg-zinc-950 border border-red-950 rounded px-2 py-1.5 text-xs text-red-100">
                 </div>
@@ -331,12 +376,15 @@ function initApp() {
         <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold transition">Save Potion</button>
     </form>`;
         } else if (type === "suggested") {
+            const sortedIngredients = Object.entries(state.cachedIngredients)
+                .sort((a, b) => a[1].name.toLowerCase().localeCompare(b[1].name.toLowerCase()));
+
             fieldsHtml = `
         <form id="admin-add-suggested-form" class="space-y-3 border-b border-red-950 pb-4">
             <h3 class="text-xs font-bold text-red-200">Set Ingredient Suggested Price</h3>
             <select id="admin-sug-ing" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                 <option value="">Select Ingredient...</option>
-                ${Object.entries(state.cachedIngredients).map(([id, ing]) => `<option value="${id}">${ing.name}</option>`).join('')}
+                ${sortedIngredients.map(([id, ing]) => `<option value="${id}">${ing.name}</option>`).join('')}
             </select>
             <input type="number" step="0.01" id="admin-sug-price" placeholder="Suggested Price (Gold)" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
             <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold transition">Save Suggested Price</button>

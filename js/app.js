@@ -128,9 +128,9 @@ function renderCatalog() {
             ? '<p class="text-xs text-zinc-500 italic">No price records yet.</p>'
             : offers.map((offer, idx) => {
                 const loc = state.cachedLocations[offer.locationId] || { hold: "Unknown", town: "Unknown" };
-
+                
                 // Format date as "Short Month Day" (e.g., "Oct 24")
-                const updatedDate = offer.updatedAt
+                const updatedDate = offer.updatedAt 
                     ? new Date(offer.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                     : '';
 

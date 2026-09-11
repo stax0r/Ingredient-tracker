@@ -156,21 +156,21 @@
             <!-- Batch Operations -->
             <div class="bg-zinc-900 border border-red-950 rounded-xl p-5 shadow-xl space-y-4">
                 <h2 class="text-lg font-semibold text-red-100">Batch Brewing</h2>
-                <form id="batch-add-form" class="flex items-center gap-3 w-full">
+                <form id="batch-add-form" class="flex flex-col sm:flex-row items-center gap-3 w-full">
                     <!-- Expanded Recipe Select -->
                     <select id="simulator-recipe-select" required
-                        class="flex-1 min-w-0 bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-200">
+                        class="w-full sm:flex-1 bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-200 min-w-0">
                         <option value="">Select a Potion Recipe...</option>
                     </select>
                     <!-- Compact Quantity Input -->
                     <input type="number" id="simulator-qty" min="1" value="1" required
-                        class="w-14 flex-shrink-0 bg-zinc-950 border border-red-950 rounded px-2 py-2 text-xs text-center text-red-200">
+                        class="w-full sm:w-20 flex-shrink-0 bg-zinc-950 border border-red-950 rounded px-2 py-2 text-xs text-center text-red-200">
                     <!-- Submit Button -->
                     <button type="submit"
-                        class="flex-shrink-0 bg-red-900 hover:bg-red-800 border border-red-700 px-4 py-2 rounded text-xs font-semibold text-white transition">Add</button>
+                        class="w-full sm:w-auto flex-shrink-0 bg-red-900 hover:bg-red-800 border border-red-700 px-5 py-2 rounded text-xs font-semibold text-white transition">Add</button>
                 </form>
                 <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto"></div>
-            </div>>
+            </div>
 
             <div class="bg-zinc-900 border border-red-950 rounded-xl p-5 shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-red-950/80 pb-2">

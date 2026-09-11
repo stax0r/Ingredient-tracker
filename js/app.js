@@ -248,12 +248,12 @@ function initApp() {
     openLoginBtn?.addEventListener("click", () => loginModal?.classList.remove("hidden"));
     document.getElementById("btn-close-login")?.addEventListener("click", () => loginModal?.classList.add("hidden"));
 
-    // Update Auth State handling
+    //Auth State handling
     onAuthStateChanged(auth, (user) => {
         const loggedInView = document.getElementById("logged-in-view");
         const adminToggles = document.getElementById("admin-toggles");
-        const guestContribBtn = document.getElementById("guest-contrib-btn");
         const priceLoggerSection = document.getElementById("price-logger-section");
+        const guestContribSection = document.getElementById("guest-contrib-section");
 
         const isLoggedIn = !!user;
 
@@ -262,7 +262,9 @@ function initApp() {
         if (loggedInView) loggedInView.classList.toggle("hidden", !isLoggedIn);
         if (adminToggles) adminToggles.classList.toggle("hidden", !isLoggedIn);
         if (priceLoggerSection) priceLoggerSection.classList.toggle("hidden", !isLoggedIn);
-        if (guestContribBtn) guestContribBtn.classList.toggle("hidden", isLoggedIn);
+
+        // Hide Contribute Market Data section when user is logged in
+        if (guestContribSection) guestContribSection.classList.toggle("hidden", isLoggedIn);
 
         if (isLoggedIn) {
             const userDisplay = document.getElementById("user-display");

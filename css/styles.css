@@ -55,9 +55,10 @@ textarea {
     background-color: #09090b;
     border: 1px solid #450a0a;
     color: #fef2f2;
-    padding: 0.5rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 0.375rem;
     outline: none;
+    box-sizing: border-box;
 }
 
 input:focus, select:focus, textarea:focus {
@@ -67,7 +68,7 @@ input:focus, select:focus, textarea:focus {
 button {
     cursor: pointer;
     border-radius: 0.375rem;
-    padding: 0.375rem 0.75rem;
+    padding: 0.5rem 0.875rem;
     font-weight: 600;
     border: 1px solid transparent;
     transition: background-color 0.2s, border-color 0.2s;
@@ -77,7 +78,7 @@ button {
 header {
     background-color: #18181b;
     border-bottom: 1px solid #450a0a;
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -114,14 +115,14 @@ header span {
 }
 
 /* Buttons */
-.bg-zinc-800, #btn-admin-locations, #btn-admin-ingredients, #btn-admin-recipes, #guest-contrib-btn {
+.bg-zinc-800, #btn-admin-locations, #btn-admin-ingredients, #btn-admin-recipes {
     background-color: #27272a;
     border: 1px solid rgba(127, 29, 29, 0.5);
     color: #fecaca;
     white-space: nowrap;
 }
 
-.bg-zinc-800:hover, #btn-admin-locations:hover, #btn-admin-ingredients:hover, #btn-admin-recipes:hover, #guest-contrib-btn:hover {
+.bg-zinc-800:hover, #btn-admin-locations:hover, #btn-admin-ingredients:hover, #btn-admin-recipes:hover {
     background-color: #3f3f46;
     border-color: #dc2626;
 }
@@ -146,14 +147,14 @@ header span {
     background-color: #27272a;
 }
 
-/* Layout Containers & Cards */
+/* Main Layout & Cards */
 main {
     max-width: 80rem;
     margin: 0 auto;
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
     width: 100%;
 }
 
@@ -161,23 +162,8 @@ section, .grid > div {
     background-color: #18181b;
     border: 1px solid #450a0a;
     border-radius: 0.75rem;
-    padding: 1.5rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-}
-
-@media (min-width: 1024px) {
-    .grid-cols-1.lg\:grid-cols-2 {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    padding: 1.25rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
 }
 
 /* Form Grids */
@@ -199,22 +185,11 @@ section, .grid > div {
     gap: 0.75rem;
 }
 
-/* Catalog Header & Controls */
+/* Catalog Controls */
 .catalog-controls {
     display: flex;
-    flex-direction: row;
     align-items: center;
     gap: 0.75rem;
-    width: auto;
-}
-
-#catalog-location-filter {
-    width: auto;
-    min-width: 12rem;
-}
-
-#catalog-search {
-    width: 14rem;
 }
 
 /* Catalog Grid */
@@ -250,112 +225,11 @@ section, .grid > div {
     gap: 0.5rem;
 }
 
-#catalog-container h3 {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #fef2f2;
-    border-bottom: 1px solid #450a0a;
-    padding-bottom: 0.25rem;
-}
-
-/* Batch & Optimization Display */
-#batch-queue-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    max-height: 9rem;
-    overflow-y: auto;
-}
-
-#batch-queue-list > div {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: #09090b;
-    border: 1px solid #450a0a;
-    padding: 0.375rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    color: #fecaca;
-}
-
-#detailed-breakdown-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    max-height: 12rem;
-    overflow-y: auto;
-    padding-right: 0.25rem;
-}
-
-/* Modals */
-.fixed.inset-0 {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    z-index: 50;
-}
-
-#admin-modal > div,
-#guest-modal > div,
-#login-modal > div {
-    background-color: #18181b;
-    border: 1px solid #450a0a;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    width: 100%;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    position: relative;
-}
-
-#admin-modal > div { max-width: 36rem; }
-#guest-modal > div { max-width: 28rem; }
-#login-modal > div { max-width: 24rem; }
-
-.flex.justify-between.items-center {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* Toasts */
-#toast-container {
-    position: fixed;
-    bottom: 1.25rem;
-    right: 1.25rem;
-    z-index: 50;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    pointer-events: none;
-}
-
-#toast-container > div {
-    pointer-events: auto;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    border: 1px solid #7f1d1d;
-    background-color: #09090b;
-    color: #fee2e2;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    font-size: 0.75rem;
-}
-
 /* Footer */
 footer {
     background-color: #18181b;
     border-top: 1px solid #450a0a;
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     font-size: 0.75rem;
     color: #fca5a5;
     margin-top: 2rem;

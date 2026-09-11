@@ -145,10 +145,15 @@ function renderCatalog() {
             }).join("");
 
         return `
-            <div class="bg-zinc-950/60 border border-red-950 rounded-lg p-4 space-y-2 flex flex-col h-48">
-                <h3 class="font-bold text-red-100 text-xs border-b border-red-950 pb-1 flex-shrink-0">${ing.name}</h3>
-                <div class="space-y-1 overflow-y-auto pr-1 flex-1">${offersHtml}</div>
-            </div>`;
+        <div class="bg-zinc-950/60 border border-red-950 rounded-lg p-4 space-y-2 flex flex-col h-48">
+        <div class="flex justify-between items-center border-b border-red-950 pb-1 flex-shrink-0">
+            <h3 class="font-bold text-red-100 text-xs">${ing.name}</h3>
+            ${ing.suggestedPrice !== undefined && ing.suggestedPrice !== null
+                ? `<span class="text-[10px] text-zinc-400 font-mono bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded" title="Base Suggested Price">~${ing.suggestedPrice}g</span>`
+                : ''}
+        </div>
+        <div class="space-y-1 overflow-y-auto pr-1 flex-1">${offersHtml}</div>
+    </div>`;
     }).join("");
 }
 
@@ -254,7 +259,7 @@ function initApp() {
 
     openLoginBtn?.addEventListener("click", () => loginModal?.classList.remove("hidden"));
     document.getElementById("btn-close-login")?.addEventListener("click", () => loginModal?.classList.add("hidden"));
-
+    document.getElementById("btn-admin-suggested")?.addEventListener("click", () => openAdminModal("Suggested Price Management", "suggested"));
     onAuthStateChanged(auth, (user) => {
         const loggedInView = document.getElementById("logged-in-view");
         const adminToggles = document.getElementById("admin-toggles");
@@ -325,6 +330,17 @@ function initApp() {
 
         <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold transition">Save Potion</button>
     </form>`;
+        } else if (type === "suggested") {
+            fieldsHtml = `
+        <form id="admin-add-suggested-form" class="space-y-3 border-b border-red-950 pb-4">
+            <h3 class="text-xs font-bold text-red-200">Set Ingredient Suggested Price</h3>
+            <select id="admin-sug-ing" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
+                <option value="">Select Ingredient...</option>
+                ${Object.entries(state.cachedIngredients).map(([id, ing]) => `<option value="${id}">${ing.name}</option>`).join('')}
+            </select>
+            <input type="number" step="0.01" id="admin-sug-price" placeholder="Suggested Price (Gold)" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
+            <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white p-2 rounded text-xs font-semibold transition">Save Suggested Price</button>
+        </form>`;
         }
 
         adminContent.innerHTML = fieldsHtml;
@@ -353,6 +369,14 @@ function initApp() {
                     }
                 }
                 payload = { name: document.getElementById("admin-rec-name").value, ingredients };
+            } else if (type === "suggested") {
+                const ingId = document.getElementById("admin-sug-ing")?.value;
+                const priceVal = parseFloat(document.getElementById("admin-sug-price")?.value);
+
+                if (ingId) {
+                    targetRef = `ingredients/${ingId}/suggestedPrice`;
+                    payload = priceVal;
+                }
             }
 
             set(ref(db, targetRef), payload)

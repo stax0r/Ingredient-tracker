@@ -174,3 +174,8 @@ button:active {
     margin: 0 !important;
     padding: 0 !important;
 }
+
+#simulator-qty::-webkit-inner-spin-button,
+#simulator-qty::-webkit-outer-spin-button {
+    opacity: 0.5;
+}

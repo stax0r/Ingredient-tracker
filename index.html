@@ -37,16 +37,17 @@
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto p-6 space-y-6">
+            <!-- Price Logger (Admin Only) -->
             <section id="price-logger-section" class="hidden bg-zinc-900 border border-red-950 rounded-xl p-5 shadow-xl space-y-4">
                 <h2 class="text-lg font-semibold text-red-100">Record Ingredient Price</h2>
                 <form id="direct-price-form" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                    <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <select id="price-ingredient-select" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                         <option value="">Select Ingredient...</option>
                     </select>
-                    <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <select id="price-location-select" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                         <option value="">Select Location...</option>
                     </select>
-                    <input type="number" step="0.01" id="price-amount" placeholder="0.00" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <input type="number" step="0.01" id="price-amount" placeholder="0.00" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                     <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 py-2 rounded text-xs font-semibold text-white">Record Price</button>
                 </form>
             </section>
@@ -57,10 +58,11 @@
                     <h2 class="text-lg font-bold text-red-100">Contribute Market Data</h2>
                     <p class="text-xs text-red-400">Leave a missive with the latest valuation or suggest new additions to keep market indices accurate.</p>
                 </div>
-                <form id="guest-form" class="space-y-3">
+                
+                <form id="guest-form" class="space-y-4">
                     <div>
                         <label class="block text-xs text-red-300 mb-1">Missive Type</label>
-                        <select id="guest-contrib-type" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <select id="guest-contrib-type" class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                             <option value="price">Price Update</option>
                             <option value="location">New Location Suggestion</option>
                             <option value="letter">General Letter</option>
@@ -68,26 +70,29 @@
                     </div>
 
                     <div id="guest-price-fields" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <select id="guest-ingredient-select" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <select id="guest-ingredient-select" class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                             <option value="">Select Ingredient...</option>
                         </select>
-                        <select id="guest-location-select" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <select id="guest-location-select" class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                             <option value="">Select Location...</option>
                         </select>
-                        <input type="number" step="0.01" id="guest-price-amount" placeholder="Price (Gold)" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <input type="number" step="0.01" id="guest-price-amount" placeholder="Price (Gold)" class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                     </div>
 
                     <div id="guest-location-fields" class="grid grid-cols-1 md:grid-cols-2 gap-3 hidden">
-                        <input type="text" id="guest-loc-hold" placeholder="Hold / Region" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                        <input type="text" id="guest-loc-town" placeholder="Town / Settlement" class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        <input type="text" id="guest-loc-hold" placeholder="Hold / Region" class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
+                        <input type="text" id="guest-loc-town" placeholder="Town / Settlement" class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                     </div>
 
                     <div id="guest-letter-fields" class="space-y-2 hidden">
-                        <textarea id="guest-letter-content" rows="3" placeholder="Write your missive here..." class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100"></textarea>
+                        <textarea id="guest-letter-content" rows="3" placeholder="Write your missive here..." class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100"></textarea>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-red-950/60">
-                        <input type="text" id="guest-author" placeholder="Your Name / Signature" class="w-full sm:w-64 bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                    <!-- Signature (Bottom Left) & Dispatch Button (Bottom Right) -->
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-red-950/60">
+                        <div class="w-full sm:w-72">
+                            <input type="text" id="guest-author" placeholder="Your Name / Signature" class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
+                        </div>
                         <button type="submit" class="w-full sm:w-auto bg-red-900 hover:bg-red-800 border border-red-700 px-6 py-2 rounded text-xs font-semibold text-white transition">Dispatch Missive</button>
                     </div>
                 </form>
@@ -114,11 +119,11 @@
                 <div class="bg-zinc-900 border border-red-950 rounded-xl p-5 shadow-xl space-y-4">
                     <h2 class="text-lg font-semibold text-red-100">Batch Brewing</h2>
                     <form id="batch-add-form" class="flex gap-3">
-                        <select id="simulator-recipe-select" required class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-red-200">
+                        <select id="simulator-recipe-select" required class="flex-1 bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-200">
                             <option value="">Select a Potion Recipe...</option>
                         </select>
-                        <input type="number" id="simulator-qty" min="1" value="1" required class="w-20 bg-zinc-950 border border-red-950 rounded p-2 text-sm text-center text-red-200">
-                        <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 px-4 py-2 rounded text-sm font-semibold text-white">Add</button>
+                        <input type="number" id="simulator-qty" min="1" value="1" required class="w-20 bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-center text-red-200">
+                        <button type="submit" class="bg-red-900 hover:bg-red-800 border border-red-700 px-4 py-2 rounded text-xs font-semibold text-white">Add</button>
                     </form>
                     <div id="batch-queue-list" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto"></div>
                 </div>
@@ -134,9 +139,10 @@
         </main>
     </div>
 
-    <!-- Modals & Toasts -->
+    <!-- Toast Notifications Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+    <!-- Admin Modal -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
         <div class="bg-zinc-900 border border-red-950 rounded-xl p-6 max-w-xl w-full space-y-4 shadow-2xl relative">
             <div class="flex justify-between items-center border-b border-red-950 pb-3">
@@ -155,8 +161,8 @@
                 <button id="btn-close-login" class="text-red-400 hover:text-white font-bold text-sm">✕</button>
             </div>
             <form id="auth-form" class="space-y-3">
-                <input type="email" id="auth-email" placeholder="Email" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
-                <input type="password" id="auth-password" placeholder="Password" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                <input type="email" id="auth-email" placeholder="Email" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
+                <input type="password" id="auth-password" placeholder="Password" required class="w-full bg-zinc-950 border border-red-950 rounded px-3 py-2 text-xs text-red-100">
                 <button type="submit" class="w-full bg-red-900 hover:bg-red-800 text-white border border-red-700 py-2 rounded text-xs font-semibold">Sign In</button>
             </form>
         </div>

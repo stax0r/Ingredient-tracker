@@ -452,7 +452,8 @@ function initApp() {
 
         if (isPlaceholder) {
             showToast("Missive recorded locally (Webhook URL omitted).", "info");
-            guestModal?.classList.add("hidden");
+            document.getElementById("guest-form").reset();
+            updateGuestFormFields();
             return;
         }
 
@@ -468,8 +469,8 @@ function initApp() {
 
             if (response.ok || response.status === 204) {
                 showToast("Missive delivered successfully!", "success");
-                guestModal?.classList.add("hidden");
                 document.getElementById("guest-form").reset();
+                updateGuestFormFields();
             } else {
                 const errData = await response.text();
                 showToast(`Discord Error (${response.status}): ${errData}`, "error");

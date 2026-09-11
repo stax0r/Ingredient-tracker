@@ -8,48 +8,56 @@ import {
 import {
   getFirestore,
   collection,
-  onSnapshot,
+  getDocs,
   addDoc,
-  doc,
-  deleteDoc,
   updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  orderBy,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// --- Firebase Configuration & Initialization ---
+// Firebase Configuration
 const firebaseConfig = {
-  // Replace with your actual Firebase config object if needed
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDTQPUXzYr8UAawpvNce6wbXJC07-ZOmeo",
+  authDomain: "AIzaSyDTQPUXzYr8UAawpvNce6wbXJC07-ZOmeo",
+  projectId: "alchemy-price-tracker",
+  storageBucket: "alchemy-price-tracker.firebasestorage.app",
+  messagingSenderId: "357962236614",
+  appId: "1:357962236614:web:770c78966226a35f138dc7"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 // State Management
-let currentIngredients = [];
-let currentLocations = [];
-let currentRecipes = [];
-let currentPrices = [];
+let currentUser = null;
+let ingredients = [];
+let locations = [];
+let recipes = [];
+let prices = [];
 let batchQueue = [];
 
 // DOM Elements
-const authContainer = document.getElementById("auth-container");
+const priceLoggerSection = document.getElementById("price-logger-section");
+const guestMissiveSection = document.getElementById("guest-missive-section");
+const adminToggles = document.getElementById("admin-toggles");
 const btnOpenLogin = document.getElementById("btn-open-login");
-const loginModal = document.getElementById("login-modal");
-const btnCloseLogin = document.getElementById("btn-close-login");
-const authForm = document.getElementById("auth-form");
 const loggedInView = document.getElementById("logged-in-view");
 const userDisplay = document.getElementById("user-display");
 const btnSignout = document.getElementById("btn-signout");
-const adminToggles = document.getElementById("admin-toggles");
-const priceLoggerSection = document.getElementById("price-logger-section");
-const guestMissiveSection = document.getElementById("guest-missive-section");
+const loginModal = document.getElementById("login-modal");
+const btnCloseLogin = document.getElementById("btn-close-login");
+const authForm = document.getElementById("auth-form");
+
+const adminModal = document.getElementById("admin-modal");
+const adminModalTitle = document.getElementById("admin-modal-title");
+const adminModalContent = document.getElementById("admin-modal-content");
+const btnCloseAdmin = document.getElementById("btn-close-admin");
 
 const catalogContainer = document.getElementById("catalog-container");
 const catalogSearch = document.getElementById("catalog-search");
@@ -61,45 +69,383 @@ const guestPriceFields = document.getElementById("guest-price-fields");
 const guestLocationFields = document.getElementById("guest-location-fields");
 const guestLetterFields = document.getElementById("guest-letter-fields");
 
-// Toast Notification Helper
-function showToast(message, type = "info") {
-  const container = document.getElementById("toast-container");
-  if (!container) return;
-  const toast = document.createElement("div");
-  toast.className = `p-3 rounded text-xs font-semibold text-white shadow-lg transition-all duration-300 pointer-events-auto ${
-    type === "error" ? "bg-red-800 border border-red-600" : type === "success" ? "bg-emerald-800 border border-emerald-600" : "bg-zinc-800 border border-red-900"
-  }`;
-  toast.textContent = message;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
-// Global Auth State Handler
+// Authentication Listener
 onAuthStateChanged(auth, (user) => {
+  currentUser = user;
   if (user) {
-    btnOpenLogin?.classList.add("hidden");
-    loggedInView?.classList.remove("hidden");
-    if (userDisplay) userDisplay.textContent = user.email;
-    adminToggles?.classList.remove("hidden");
-    priceLoggerSection?.classList.remove("hidden");
-    
-    // HIDE courier missive form when authenticated
+    userDisplay.textContent = user.email;
+    btnOpenLogin.classList.add("hidden");
+    loggedInView.classList.remove("hidden");
+    adminToggles.classList.remove("hidden");
+    priceLoggerSection.classList.remove("hidden");
+
+    // Hide guest missive section when logged in
     guestMissiveSection?.classList.add("hidden");
   } else {
-    btnOpenLogin?.classList.remove("hidden");
-    loggedInView?.classList.add("hidden");
-    adminToggles?.classList.add("hidden");
-    priceLoggerSection?.classList.add("hidden");
-    
-    // SHOW courier missive form when logged out
+    btnOpenLogin.classList.remove("hidden");
+    loggedInView.classList.add("hidden");
+    adminToggles.classList.add("hidden");
+    priceLoggerSection.classList.add("hidden");
+
+    // Show guest missive section when logged out
     guestMissiveSection?.classList.remove("hidden");
   }
+  loadData();
 });
 
-// Login Modal Events
+// Toast Notification
+function showToast(message, type = "info") {
+  const toastContainer = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  const bgClass = type === "error" ? "bg-red-950 border-red-700 text-red-200" :
+    type === "success" ? "bg-zinc-900 border-red-600 text-red-100" :
+      "bg-zinc-900 border-red-900 text-red-300";
+  toast.className = `p-3 rounded-lg border shadow-xl text-xs flex items-center justify-between gap-4 transition-all duration-300 transform translate-y-2 pointer-events-auto ${bgClass}`;
+  toast.innerHTML = `<span>${message}</span><button onclick="this.parentElement.remove()" class="text-red-400 hover:text-white font-bold">✕</button>`;
+  toastContainer.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add("opacity-0", "-translate-y-2");
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+// Data Fetching
+async function loadData() {
+  try {
+    const [ingSnap, locSnap, recSnap, priceSnap] = await Promise.all([
+      getDocs(collection(db, "ingredients")),
+      getDocs(collection(db, "locations")),
+      getDocs(collection(db, "recipes")),
+      getDocs(collection(db, "prices"))
+    ]);
+
+    ingredients = ingSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    locations = locSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    recipes = recSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    prices = priceSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    populateSelects();
+    renderCatalog();
+    renderBatchBrewing();
+  } catch (err) {
+    console.error("Error loading data:", err);
+    showToast("Failed to load market data.", "error");
+  }
+}
+
+// Populate Dropdowns
+function populateSelects() {
+  const ingredientSelects = [
+    document.getElementById("price-ingredient-select"),
+    document.getElementById("guest-ingredient-select")
+  ];
+  const locationSelects = [
+    document.getElementById("price-location-select"),
+    document.getElementById("guest-location-select"),
+    catalogLocationFilter
+  ];
+  const recipeSelect = document.getElementById("simulator-recipe-select");
+
+  ingredientSelects.forEach(select => {
+    if (!select) return;
+    const val = select.value;
+    select.innerHTML = `<option value="">Select Ingredient...</option>` +
+      ingredients.map(i => `<option value="${i.id}">${i.name}</option>`).join("");
+    select.value = val;
+  });
+
+  locationSelects.forEach(select => {
+    if (!select) return;
+    const val = select.value;
+    const isFilter = select === catalogLocationFilter;
+    select.innerHTML = `<option value="">${isFilter ? "Filter by Location (All)" : "Select Location..."}</option>` +
+      locations.map(l => `<option value="${l.id}">${l.hold} - ${l.town}</option>`).join("");
+    select.value = val;
+  });
+
+  if (recipeSelect) {
+    const val = recipeSelect.value;
+    recipeSelect.innerHTML = `<option value="">Select a Potion Recipe...</option>` +
+      recipes.map(r => `<option value="${r.id}">${r.name}</option>`).join("");
+    recipeSelect.value = val;
+  }
+}
+
+// Render Catalog
+function renderCatalog() {
+  if (!catalogContainer) return;
+
+  const searchTerm = catalogSearch?.value.toLowerCase() || "";
+  const filterLoc = catalogLocationFilter?.value || "";
+
+  const filtered = ingredients.filter(ing => {
+    const matchesSearch = ing.name.toLowerCase().includes(searchTerm);
+    if (!matchesSearch) return false;
+
+    if (filterLoc) {
+      const hasPriceInLoc = prices.some(p => p.ingredientId === ing.id && p.locationId === filterLoc);
+      return hasPriceInLoc;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    catalogContainer.innerHTML = `<p class="text-xs text-red-400 italic col-span-full">No ingredients match your criteria.</p>`;
+    return;
+  }
+
+  catalogContainer.innerHTML = filtered.map(ing => {
+    let ingPrices = prices.filter(p => p.ingredientId === ing.id);
+    if (filterLoc) {
+      ingPrices = ingPrices.filter(p => p.locationId === filterLoc);
+    }
+
+    const priceList = ingPrices.length > 0 ? ingPrices.map(p => {
+      const loc = locations.find(l => l.id === p.locationId);
+      const locName = loc ? `${loc.hold} (${loc.town})` : "Unknown Location";
+      return `<div class="flex justify-between items-center text-xs py-1 border-b border-red-950/50">
+                <span class="text-red-300/80">${locName}</span>
+                <span class="font-semibold text-red-200">${p.amount.toFixed(2)} Gold</span>
+            </div>`;
+    }).join("") : `<p class="text-[11px] text-zinc-500 italic">No price data recorded.</p>`;
+
+    return `<div class="bg-zinc-950 border border-red-950 rounded-lg p-4 space-y-2 shadow">
+            <h3 class="font-bold text-red-200 text-sm flex justify-between items-center">
+                <span>${ing.name}</span>
+            </h3>
+            <div class="space-y-1">${priceList}</div>
+        </div>`;
+  }).join("");
+}
+
+// Guest Missive Logic
+if (guestContribType) {
+  guestContribType.addEventListener("change", updateGuestFormFields);
+}
+
+function updateGuestFormFields() {
+  const type = guestContribType.value;
+  guestPriceFields.classList.toggle("hidden", type !== "price");
+  guestLocationFields.classList.toggle("hidden", type !== "location");
+  guestLetterFields.classList.toggle("hidden", type !== "letter");
+}
+
+if (guestForm) {
+  guestForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const type = guestContribType.value;
+    const author = document.getElementById("guest-author").value || "Anonymous";
+
+    try {
+      if (type === "price") {
+        const ingredientId = document.getElementById("guest-ingredient-select").value;
+        const locationId = document.getElementById("guest-location-select").value;
+        const amount = parseFloat(document.getElementById("guest-price-amount").value);
+
+        if (!ingredientId || !locationId || isNaN(amount)) {
+          showToast("Please fill all price fields.", "error");
+          return;
+        }
+
+        await addDoc(collection(db, "guest_submissions"), {
+          type: "price",
+          ingredientId,
+          locationId,
+          amount,
+          author,
+          createdAt: serverTimestamp()
+        });
+      } else if (type === "location") {
+        const hold = document.getElementById("guest-loc-hold").value;
+        const town = document.getElementById("guest-loc-town").value;
+
+        if (!hold || !town) {
+          showToast("Please specify hold and town.", "error");
+          return;
+        }
+
+        await addDoc(collection(db, "guest_submissions"), {
+          type: "location",
+          hold,
+          town,
+          author,
+          createdAt: serverTimestamp()
+        });
+      } else if (type === "letter") {
+        const content = document.getElementById("guest-letter-content").value;
+        if (!content) {
+          showToast("Please write a message.", "error");
+          return;
+        }
+
+        await addDoc(collection(db, "guest_submissions"), {
+          type: "letter",
+          content,
+          author,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      showToast("Missive dispatched successfully!", "success");
+      guestForm.reset();
+      updateGuestFormFields();
+    } catch (err) {
+      console.error("Submission error:", err);
+      showToast("Failed to dispatch missive.", "error");
+    }
+  });
+}
+
+// Record Price Form (Logged In)
+const directPriceForm = document.getElementById("direct-price-form");
+if (directPriceForm) {
+  directPriceForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    const ingredientId = document.getElementById("price-ingredient-select").value;
+    const locationId = document.getElementById("price-location-select").value;
+    const amount = parseFloat(document.getElementById("price-amount").value);
+
+    if (!ingredientId || !locationId || isNaN(amount)) {
+      showToast("Invalid price submission data.", "error");
+      return;
+    }
+
+    try {
+      const q = query(
+        collection(db, "prices"),
+        where("ingredientId", "==", ingredientId),
+        where("locationId", "==", locationId)
+      );
+      const existing = await getDocs(q);
+
+      if (!existing.empty) {
+        const existingDoc = existing.docs[0];
+        await updateDoc(doc(db, "prices", existingDoc.id), {
+          amount,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        await addDoc(collection(db, "prices"), {
+          ingredientId,
+          locationId,
+          amount,
+          updatedAt: serverTimestamp()
+        });
+      }
+
+      showToast("Price recorded successfully!", "success");
+      directPriceForm.reset();
+      loadData();
+    } catch (err) {
+      console.error("Error recording price:", err);
+      showToast("Failed to record price.", "error");
+    }
+  });
+}
+
+// Batch Brewing Logic
+const batchAddForm = document.getElementById("batch-add-form");
+if (batchAddForm) {
+  batchAddForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const recipeId = document.getElementById("simulator-recipe-select").value;
+    const qty = parseInt(document.getElementById("simulator-qty").value, 10);
+
+    if (!recipeId || isNaN(qty) || qty < 1) return;
+
+    const existing = batchQueue.find(item => item.recipeId === recipeId);
+    if (existing) {
+      existing.qty += qty;
+    } else {
+      batchQueue.push({ recipeId, qty });
+    }
+
+    renderBatchBrewing();
+  });
+}
+
+function renderBatchBrewing() {
+  const queueList = document.getElementById("batch-queue-list");
+  const breakdownContainer = document.getElementById("detailed-breakdown-container");
+  const totalCostEl = document.getElementById("total-batch-cost");
+
+  if (!queueList || !breakdownContainer || !totalCostEl) return;
+
+  if (batchQueue.length === 0) {
+    queueList.innerHTML = `<p class="text-xs text-red-400/60 italic">No potions queued for brewing.</p>`;
+    breakdownContainer.innerHTML = `<p class="text-xs text-red-400/60 italic">Select recipes to calculate sourcing routes.</p>`;
+    totalCostEl.textContent = "Total Optimal: 0 Gold";
+    return;
+  }
+
+  queueList.innerHTML = batchQueue.map(item => {
+    const recipe = recipes.find(r => r.id === item.recipeId);
+    return `<div class="bg-zinc-950 border border-red-950 px-3 py-1.5 rounded flex items-center gap-2 text-xs">
+            <span class="text-red-200 font-semibold">${recipe ? recipe.name : "Unknown"}</span>
+            <span class="text-red-400">x${item.qty}</span>
+            <button onclick="removeFromBatch('${item.recipeId}')" class="text-red-500 hover:text-white font-bold ml-1">✕</button>
+        </div>`;
+  }).join("");
+
+  const requiredIngredients = {};
+  batchQueue.forEach(item => {
+    const recipe = recipes.find(r => r.id === item.recipeId);
+    if (recipe && recipe.ingredients) {
+      recipe.ingredients.forEach(req => {
+        requiredIngredients[req.ingredientId] = (requiredIngredients[req.ingredientId] || 0) + (req.amount * item.qty);
+      });
+    }
+  });
+
+  let overallTotal = 0;
+  const breakdownItems = Object.entries(requiredIngredients).map(([ingId, neededQty]) => {
+    const ing = ingredients.find(i => i.id === ingId);
+    const ingPrices = prices.filter(p => p.ingredientId === ingId);
+
+    let bestPrice = null;
+    let bestLoc = null;
+
+    ingPrices.forEach(p => {
+      if (bestPrice === null || p.amount < bestPrice) {
+        bestPrice = p.amount;
+        bestLoc = locations.find(l => l.id === p.locationId);
+      }
+    });
+
+    const subtotal = bestPrice !== null ? bestPrice * neededQty : 0;
+    overallTotal += subtotal;
+
+    const locText = bestLoc ? `${bestLoc.hold} (${bestLoc.town})` : "Unspecified";
+    const priceText = bestPrice !== null ? `${bestPrice.toFixed(2)} Gold/ea` : "N/A";
+
+    return `<div class="bg-zinc-950 border border-red-950 p-3 rounded text-xs space-y-1">
+            <div class="flex justify-between font-semibold text-red-200">
+                <span>${ing ? ing.name : "Unknown Ingredient"} x${neededQty}</span>
+                <span>${subtotal > 0 ? `${subtotal.toFixed(2)} Gold` : "No Pricing"}</span>
+            </div>
+            <div class="flex justify-between text-[11px] text-red-400/80">
+                <span>Optimal Source: ${locText}</span>
+                <span>${priceText}</span>
+            </div>
+        </div>`;
+  });
+
+  breakdownContainer.innerHTML = breakdownItems.join("");
+  totalCostEl.textContent = `Total Optimal: ${overallTotal.toFixed(2)} Gold`;
+}
+
+window.removeFromBatch = function (recipeId) {
+  batchQueue = batchQueue.filter(item => item.recipeId !== recipeId);
+  renderBatchBrewing();
+};
+
+// Search & Filter Listeners
+catalogSearch?.addEventListener("input", renderCatalog);
+catalogLocationFilter?.addEventListener("change", renderCatalog);
+
+// Authentication UI Actions
 btnOpenLogin?.addEventListener("click", () => loginModal?.classList.remove("hidden"));
 btnCloseLogin?.addEventListener("click", () => loginModal?.classList.add("hidden"));
 
@@ -107,215 +453,178 @@ authForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("auth-email").value;
   const password = document.getElementById("auth-password").value;
+
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    loginModal?.classList.add("hidden");
+    loginModal.classList.add("hidden");
     authForm.reset();
-    showToast("Welcome back, Arch-Mage.", "success");
+    showToast("Signed in successfully!", "success");
   } catch (err) {
-    showToast("Authentication failed: " + err.message, "error");
+    console.error("Login error:", err);
+    showToast("Invalid credentials.", "error");
   }
 });
 
 btnSignout?.addEventListener("click", async () => {
   try {
     await signOut(auth);
-    showToast("Signed out successfully.");
+    showToast("Signed out successfully.", "info");
   } catch (err) {
-    showToast("Error signing out.", "error");
+    console.error("Signout error:", err);
   }
 });
 
-// Missive Form Field Switcher
-function updateGuestFormFields() {
-  const type = guestContribType.value;
-  if (type === "price") {
-    guestPriceFields?.classList.remove("hidden");
-    guestLocationFields?.classList.add("hidden");
-    guestLetterFields?.classList.add("hidden");
-  } else if (type === "location") {
-    guestPriceFields?.classList.add("hidden");
-    guestLocationFields?.classList.remove("hidden");
-    guestLetterFields?.classList.add("hidden");
-  } else {
-    guestPriceFields?.classList.add("hidden");
-    guestLocationFields?.classList.add("hidden");
-    guestLetterFields?.classList.remove("hidden");
+// Admin Modals
+btnCloseAdmin?.addEventListener("click", () => adminModal?.classList.add("hidden"));
+
+document.getElementById("btn-admin-locations")?.addEventListener("click", () => openAdminModal("locations"));
+document.getElementById("btn-admin-ingredients")?.addEventListener("click", () => openAdminModal("ingredients"));
+document.getElementById("btn-admin-recipes")?.addEventListener("click", () => openAdminModal("recipes"));
+
+function openAdminModal(type) {
+  if (!currentUser) return;
+  adminModal.classList.remove("hidden");
+
+  if (type === "locations") {
+    adminModalTitle.textContent = "Manage Locations";
+    renderAdminLocations();
+  } else if (type === "ingredients") {
+    adminModalTitle.textContent = "Manage Ingredients";
+    renderAdminIngredients();
+  } else if (type === "recipes") {
+    adminModalTitle.textContent = "Manage Recipes";
+    renderAdminRecipes();
   }
 }
 
-guestContribType?.addEventListener("change", updateGuestFormFields);
-
-// Guest Courier Missive Submission Handler
-guestForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const type = guestContribType.value;
-  const author = document.getElementById("guest-author").value || "Wandering Alchemist";
-
-  let payload = {
-    type,
-    author,
-    timestamp: new Date().toISOString()
-  };
-
-  if (type === "price") {
-    payload.ingredient = document.getElementById("guest-ingredient-select").value;
-    payload.location = document.getElementById("guest-location-select").value;
-    payload.price = parseFloat(document.getElementById("guest-price-amount").value);
-    if (!payload.ingredient || !payload.location || isNaN(payload.price)) {
-      showToast("Please fill in all valuation details.", "error");
-      return;
-    }
-  } else if (type === "location") {
-    payload.hold = document.getElementById("guest-loc-hold").value;
-    payload.town = document.getElementById("guest-loc-town").value;
-    if (!payload.hold || !payload.town) {
-      showToast("Please specify Hold and Settlement names.", "error");
-      return;
-    }
-  } else {
-    payload.letter = document.getElementById("guest-letter-content").value;
-    if (!payload.letter) {
-      showToast("Please pen your message before sending.", "error");
-      return;
-    }
-  }
-
-  // Simulated Webhook Dispatch / Local Log
-  try {
-    showToast("Courier missive dispatched!", "success");
-    guestForm.reset();
-    updateGuestFormFields();
-  } catch (err) {
-    showToast("Courier dispatch failed.", "error");
-  }
-});
-
-// Firestore Realtime Subscriptions
-function initDataListeners() {
-  onSnapshot(collection(db, "ingredients"), (snap) => {
-    currentIngredients = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    populateDropdowns();
-    renderCatalog();
-  });
-
-  onSnapshot(collection(db, "locations"), (snap) => {
-    currentLocations = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    populateDropdowns();
-    renderCatalog();
-  });
-
-  onSnapshot(collection(db, "prices"), (snap) => {
-    currentPrices = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    renderCatalog();
-  });
-
-  onSnapshot(collection(db, "recipes"), (snap) => {
-    currentRecipes = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    populateRecipeDropdown();
-  });
-}
-
-// Dynamic Option Population
-function populateDropdowns() {
-  const ingSelects = [
-    document.getElementById("price-ingredient-select"),
-    document.getElementById("guest-ingredient-select")
-  ];
-  const locSelects = [
-    document.getElementById("price-location-select"),
-    document.getElementById("guest-location-select"),
-    catalogLocationFilter
-  ];
-
-  ingSelects.forEach(sel => {
-    if (!sel) return;
-    const currentVal = sel.value;
-    sel.innerHTML = `<option value="">Select Ingredient...</option>` +
-      currentIngredients.map(i => `<option value="${i.id}">${i.name}</option>`).join("");
-    sel.value = currentVal;
-  });
-
-  locSelects.forEach(sel => {
-    if (!sel) return;
-    const isFilter = sel === catalogLocationFilter;
-    const currentVal = sel.value;
-    sel.innerHTML = (isFilter ? `<option value="">Filter by Location (All)</option>` : `<option value="">Select Location...</option>`) +
-      currentLocations.map(l => `<option value="${l.id}">${l.town ? `${l.town} (${l.hold})` : l.hold}</option>`).join("");
-    sel.value = currentVal;
-  });
-}
-
-function populateRecipeDropdown() {
-  const sel = document.getElementById("simulator-recipe-select");
-  if (!sel) return;
-  sel.innerHTML = `<option value="">Select a Potion Recipe...</option>` +
-    currentRecipes.map(r => `<option value="${r.id}">${r.name}</option>`).join("");
-}
-
-// Catalog Renderer
-function renderCatalog() {
-  if (!catalogContainer) return;
-  const searchFilter = catalogSearch?.value.toLowerCase() || "";
-  const locFilter = catalogLocationFilter?.value || "";
-
-  let filtered = currentIngredients.filter(i => i.name.toLowerCase().includes(searchFilter));
-
-  if (filtered.length === 0) {
-    catalogContainer.innerHTML = `<p class="col-span-full text-center text-xs text-red-400 py-8">No ingredients found matching criteria.</p>`;
-    return;
-  }
-
-  catalogContainer.innerHTML = filtered.map(ing => {
-    let ingPrices = currentPrices.filter(p => p.ingredientId === ing.id);
-    if (locFilter) {
-      ingPrices = ingPrices.filter(p => p.locationId === locFilter);
-    }
-
-    const priceListHtml = ingPrices.length === 0
-      ? `<p class="text-[11px] text-zinc-500 italic">No price records found.</p>`
-      : ingPrices.map(p => {
-          const loc = currentLocations.find(l => l.id === p.locationId);
-          const locName = loc ? (loc.town ? `${loc.town}, ${loc.hold}` : loc.hold) : "Unknown Hold";
-          return `<div class="flex justify-between items-center text-xs py-1 border-b border-zinc-800">
-            <span class="text-red-200/80">${locName}</span>
-            <span class="font-mono text-red-400 font-bold">${p.amount} Gold</span>
-          </div>`;
-        }).join("");
-
-    return `
-      <div class="bg-zinc-950/60 border border-red-950/80 rounded-lg p-4 space-y-2 shadow">
-        <h3 class="text-sm font-bold text-red-100">${ing.name}</h3>
-        <div class="space-y-1">${priceListHtml}</div>
-      </div>
+function renderAdminLocations() {
+  adminModalContent.innerHTML = `
+        <form id="admin-add-loc" class="flex gap-2">
+            <input type="text" id="admin-hold" placeholder="Hold" required class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+            <input type="text" id="admin-town" placeholder="Town" required class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+            <button type="submit" class="bg-red-900 border border-red-700 px-3 py-1.5 rounded text-xs text-white">Add</button>
+        </form>
+        <div class="space-y-2 max-h-64 overflow-y-auto">
+            ${locations.map(l => `
+                <div class="flex justify-between items-center bg-zinc-950 p-2 rounded border border-red-950 text-xs">
+                    <span>${l.hold} - ${l.town}</span>
+                    <button onclick="deleteLocation('${l.id}')" class="text-red-500 font-bold">Delete</button>
+                </div>
+            `).join("")}
+        </div>
     `;
-  }).join("");
+
+  document.getElementById("admin-add-loc").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const hold = document.getElementById("admin-hold").value;
+    const town = document.getElementById("admin-town").value;
+    await addDoc(collection(db, "locations"), { hold, town });
+    loadData();
+    openAdminModal("locations");
+  });
 }
 
-catalogSearch?.addEventListener("input", renderCatalog);
-catalogLocationFilter?.addEventListener("change", renderCatalog);
+window.deleteLocation = async function (id) {
+  await deleteDoc(doc(db, "locations", id));
+  loadData();
+  openAdminModal("locations");
+};
 
-// Direct Price Logger Form Submission (Admin/User)
-document.getElementById("direct-price-form")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const ingredientId = document.getElementById("price-ingredient-select").value;
-  const locationId = document.getElementById("price-location-select").value;
-  const amount = parseFloat(document.getElementById("price-amount").value);
+function renderAdminIngredients() {
+  adminModalContent.innerHTML = `
+        <form id="admin-add-ing" class="flex gap-2">
+            <input type="text" id="admin-ing-name" placeholder="Ingredient Name" required class="flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+            <button type="submit" class="bg-red-900 border border-red-700 px-3 py-1.5 rounded text-xs text-white">Add</button>
+        </form>
+        <div class="space-y-2 max-h-64 overflow-y-auto">
+            ${ingredients.map(i => `
+                <div class="flex justify-between items-center bg-zinc-950 p-2 rounded border border-red-950 text-xs">
+                    <span>${i.name}</span>
+                    <button onclick="deleteIngredient('${i.id}')" class="text-red-500 font-bold">Delete</button>
+                </div>
+            `).join("")}
+        </div>
+    `;
 
-  try {
-    await addDoc(collection(db, "prices"), {
-      ingredientId,
-      locationId,
-      amount,
-      updatedAt: serverTimestamp()
+  document.getElementById("admin-add-ing").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("admin-ing-name").value;
+    await addDoc(collection(db, "ingredients"), { name });
+    loadData();
+    openAdminModal("ingredients");
+  });
+}
+
+window.deleteIngredient = async function (id) {
+  await deleteDoc(doc(db, "ingredients", id));
+  loadData();
+  openAdminModal("ingredients");
+};
+
+function renderAdminRecipes() {
+  adminModalContent.innerHTML = `
+        <form id="admin-add-rec" class="space-y-2">
+            <input type="text" id="admin-rec-name" placeholder="Potion Name" required class="w-full bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+            <div id="recipe-ingredients-inputs" class="space-y-2">
+                <div class="flex gap-2">
+                    <select class="rec-ing-select flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                        ${ingredients.map(i => `<option value="${i.id}">${i.name}</option>`).join("")}
+                    </select>
+                    <input type="number" min="1" value="1" class="rec-ing-qty w-16 bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                </div>
+            </div>
+            <button type="button" id="btn-add-ing-row" class="text-xs text-red-400 underline">+ Add Ingredient</button>
+            <button type="submit" class="w-full bg-red-900 border border-red-700 py-2 rounded text-xs text-white">Save Recipe</button>
+        </form>
+        <div class="space-y-2 max-h-48 overflow-y-auto pt-2">
+            ${recipes.map(r => `
+                <div class="flex justify-between items-center bg-zinc-950 p-2 rounded border border-red-950 text-xs">
+                    <span>${r.name}</span>
+                    <button onclick="deleteRecipe('${r.id}')" class="text-red-500 font-bold">Delete</button>
+                </div>
+            `).join("")}
+        </div>
+    `;
+
+  document.getElementById("btn-add-ing-row").addEventListener("click", () => {
+    const container = document.getElementById("recipe-ingredients-inputs");
+    const row = document.createElement("div");
+    row.className = "flex gap-2";
+    row.innerHTML = `
+            <select class="rec-ing-select flex-1 bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+                ${ingredients.map(i => `<option value="${i.id}">${i.name}</option>`).join("")}
+            </select>
+            <input type="number" min="1" value="1" class="rec-ing-qty w-16 bg-zinc-950 border border-red-950 rounded p-2 text-xs text-red-100">
+        `;
+    container.appendChild(row);
+  });
+
+  document.getElementById("admin-add-rec").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("admin-rec-name").value;
+    const selects = document.querySelectorAll(".rec-ing-select");
+    const qtys = document.querySelectorAll(".rec-ing-qty");
+
+    const recipeIngredients = [];
+    selects.forEach((select, idx) => {
+      recipeIngredients.push({
+        ingredientId: select.value,
+        amount: parseInt(qtys[idx].value, 10) || 1
+      });
     });
-    showToast("Price valuation logged.", "success");
-    e.target.reset();
-  } catch (err) {
-    showToast("Failed to log price.", "error");
-  }
-});
 
-// Initialize listeners on module load
-initDataListeners();
-updateGuestFormFields();
+    await addDoc(collection(db, "recipes"), {
+      name,
+      ingredients: recipeIngredients
+    });
+
+    loadData();
+    openAdminModal("recipes");
+  });
+}
+
+window.deleteRecipe = async function (id) {
+  await deleteDoc(doc(db, "recipes", id));
+  loadData();
+  openAdminModal("recipes");
+};
